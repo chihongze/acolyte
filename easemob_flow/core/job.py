@@ -31,19 +31,19 @@ class AbstractJob(meta=ABCMeta):
         return self._description
 
     @abstractmethod
-    def on_trigger(self, *args, **kwds):
+    def on_trigger(self, context, arguments):
         """当工作单元被触发时执行此动作
         """
         pass
 
     @abstractmethod
-    def on_finish(self, *args, **kwds):
+    def on_finish(self, context, arguments):
         """当工作单元结束时执行此动作
         """
         pass
 
     @abstractmethod
-    def on_stop(self, *args, **kwds):
+    def on_stop(self, context, arguments):
         """当工作单元被终止时执行此动作
         """
         pass
