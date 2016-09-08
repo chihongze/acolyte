@@ -1,4 +1,3 @@
-import time
 import threading
 from easemob_flow.testing import EasemobFlowTestCase
 from easemob_flow.util.db import ConnectionPool
@@ -30,7 +29,6 @@ class DBPoolTestCase(EasemobFlowTestCase):
                     result = csr.fetchone()
                     print(result)
                     self.assertEqual(result, {"1": 1})
-                    time.sleep(2)
                     with cdt:
                         count += 1
                         cdt.notify_all()

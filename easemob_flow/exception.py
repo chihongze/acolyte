@@ -9,3 +9,19 @@ class EasemobFlowException(Exception):
 
     def __str__(self):
         return self.msg
+
+
+class UnsupportOperationException(EasemobFlowException):
+
+    """如果对象不支持某个操作，可以抛出该异常
+    """
+
+    @classmethod
+    def build(cls, clazz, operation):
+        return UnsupportOperationException(
+            "{clazz} not support operation: {opt}".format(
+                clazz=clazz.__name__,
+                opt=operation))
+
+    def __init__(self, msg):
+        super().__init__(msg)
