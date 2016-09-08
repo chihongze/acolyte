@@ -8,4 +8,4 @@ CREATE TABLE `job_action_data` (
   data text not null comment "执行该动作后回填的数据",
   created_on datetime not null comment "开始执行时间",
   finished_on datetime not null comment "结束时间"
-) engine=InnoDB, default charset utf8;d
+) engine=InnoDB, default charset utf8;

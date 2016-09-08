@@ -1,3 +1,4 @@
+import pkg_resources
 from abc import ABCMeta, abstractmethod
 from easemob_flow.exception import EasemobFlowException
 
@@ -57,3 +58,28 @@ class ObjectNotFoundException(EasemobFlowException):
 
     def __init__(self, object_name):
         super().__init__("Object '{name}' not found.".format(name=object_name))
+
+
+class EntryPointManager(AbstractManager):
+
+    def __init__(self, entry_point):
+        super().__init__()
+        self._entry_point = entry_point
+        self._container = {}
+
+    def load(self):
+        for ep in pkg_resources.iter_entry_points(self._entry_point):
+            self._container[ep.name] = ep.load()
+
+    def get(self, name):
+        try:
+            return self._container[name]
+        except KeyError:
+            raise ObjectNotFoundException(name)
+
+    def all(self):
+        return self._container.values()
+
+# managers for job and flow_meta
+job_manager = EntryPointManager("easemob_flow.job")
+flow_meta_manager = EntryPointManager("easemob_flow.flow_meta")
