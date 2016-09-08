@@ -7,7 +7,8 @@ class AbstractFlowExecutor(meta=ABCMeta):
         pass
 
     @abstractmethod
-    def start_flow(self, flow_name, start_flow_args, first_job_trigger_args):
+    def start_flow(self, flow_template_id,
+                   start_flow_args, first_job_trigger_args):
         """开启一个flow进程，创建flow_instance并执行第一个Job
            :param flow_name: 具体的flow_template的名称
            :param first_job_trigger_args: 触发第一个Job需要的参数
@@ -40,5 +41,22 @@ class AbstractFlowExecutor(meta=ABCMeta):
         """终止flow
            :param flow_instance_id flow的标识
            :param stop_args 终止参数
+        """
+        pass
+
+
+class EasemobFlowExecutor(AbstractFlowExecutor):
+
+    def __init__(self):
+        super().__init__()
+
+    def start_flow(self, flow_template_id,
+                   start_flow_args, first_job_trigger_args):
+        """开始一个flow:
+           S1. 获取flow_template，检查flow_template是否存在
+           S2. 检查max_run_instance
+           S3. 在flow_instance中增加一条新的记录
+           S4. 获取flow_meta，执行on_start方法
+           S5. 开始执行第一个Job，触发第一个Job的trigger_action
         """
         pass

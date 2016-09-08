@@ -21,3 +21,7 @@ class AbstractFlowContext(collections.Mapping, meta=ABCMeta):
     @abstractproperty
     def current_step(self):
         pass
+
+    @abstractproperty
+    def current_action(self):
+        pass
