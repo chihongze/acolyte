@@ -4,9 +4,6 @@ from easemob_flow.testing import EasemobFlowTestCase
 from easemob_flow.util import lang, time
 
 
-PATTERN = re.compile("<(.*)>")
-
-
 class DictClass:
 
     def __init__(self, id_, name, birth, grade):
@@ -24,6 +21,9 @@ class SlotsClass:
         self.id_ = id_
         self.name = name
         self.birth = birth
+
+
+PATTERN = re.compile("<(.*)>")
 
 
 class ToStrTestCase(EasemobFlowTestCase):
