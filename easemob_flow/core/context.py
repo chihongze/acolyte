@@ -6,7 +6,7 @@ from abc import (
 )
 
 
-class AbstractFlowContext(collections.Mapping, meta=ABCMeta):
+class AbstractFlowContext(collections.Mapping, metaclass=ABCMeta):
 
     """上下文对象用于在Flow运行中的Job之间传递数据
     """

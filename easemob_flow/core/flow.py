@@ -1,25 +1,25 @@
-import ujson
 import datetime
 from abc import ABCMeta, abstractmethod
-from easemob_flow.util.lang import to_str
-from easemob_flow.util.time import common_fmt_dt
 
 
-class FlowMeta(meta=ABCMeta):
+class FlowMeta(metaclass=ABCMeta):
 
     """flow meta
        每个流程都可以抽象成flow meta，比如工程更新、SQL审核、机器审核等等
     """
 
-    def __init__(self, name, jobs, bind_args):
+    def __init__(self, name, jobs, start_args=None, stop_args=None,
+                 description=""):
         """
         :param name: flow meta名称
-        :param jobs: 包含的Job列表
-        :param bind_args: 绑定的静态参数，格式 {jobA: {args}, jobB: {args}}
+        :param jobs: 包含的JobRef对象列表
+        :param bind_args: 绑定的静态参数，格式 {start: {args}, stop: {args}}
         """
         self._name = name
         self._jobs = jobs
-        self._bind_args = bind_args
+        self._start_args = start_args
+        self._stop_args = stop_args
+        self._description = description
 
     @property
     def name(self):
@@ -30,8 +30,20 @@ class FlowMeta(meta=ABCMeta):
         return self._jobs
 
     @property
-    def bind_args(self):
-        return self._bind_args
+    def start_args(self):
+        if self._start_args is None:
+            return {}
+        return self._start_args
+
+    @property
+    def stop_args(self):
+        if self._stop_args is None:
+            return {}
+        return self._stop_args
+
+    @property
+    def description(self):
+        return self._description
 
     @abstractmethod
     def on_start(self, context, arguments):
@@ -56,14 +68,11 @@ class FlowMeta(meta=ABCMeta):
         """
         pass
 
-    def __repr__(self):
-        return to_str(self, "name",
-                      ("jobs", lambda jobs: [j.name for j in jobs]),
-                      ("bind_args", ujson.dumps),
-                      "max_run_instance")
-
-    def __str__(self):
-        return self.__repr__()
+    @abstractmethod
+    def on_exception(self, context, exc_type, exc_value, tb):
+        """当发生异常时，执行此逻辑
+        """
+        pass
 
 
 class FlowTemplate:
@@ -85,14 +94,6 @@ class FlowTemplate:
         self.max_run_instance = max_run_instance
         self.creator = creator
         self.created_on = created_on
-
-    def __repr__(self):
-        return to_str(self, "id", "flow_meta", "name",
-                      ("bind_args", ujson.dumps), "max_run_instance",
-                      "creator", ("created_on", common_fmt_dt))
-
-    def __str__(self):
-        return self.__repr__()
 
 
 class FlowStatus:
@@ -147,10 +148,3 @@ class FlowInstance:
                                else datetime.datetime.now())
         else:
             self.updated_on = updated_on
-
-    def __repr__(self):
-        return to_str(self, "id", "flow_template_id",
-                      "initiator", "current_step", "status",
-                      ("created_on", common_fmt_dt),
-                      ("updated_on", common_fmt_dt),
-                      "description")

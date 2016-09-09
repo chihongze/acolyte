@@ -25,3 +25,31 @@ class UnsupportOperationException(EasemobFlowException):
 
     def __init__(self, msg):
         super().__init__(msg)
+
+
+class ObjectNotFoundException(EasemobFlowException):
+
+    """找不到对象
+    """
+
+    def __init__(self, object_name):
+        super().__init__("Object '{name}' not found.".format(name=object_name))
+
+
+class ObjectAlreadyExistedException(EasemobFlowException):
+
+    """重复在同一个manager当中注册相同的对象时抛出此异常
+    """
+
+    def __init__(self, object_name):
+        super().__init__(
+            "Object '{name}' already registered.".format(name=object_name))
+
+
+class InvalidStatusException(EasemobFlowException):
+
+    """操作状态发生问题时抛出此异常
+    """
+
+    def __init__(self, object_name):
+        pass

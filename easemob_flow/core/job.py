@@ -1,14 +1,11 @@
-import ujson
 import datetime
 from abc import (
     ABCMeta,
     abstractmethod
 )
-from easemob_flow.util.time import common_fmt_dt
-from easemob_flow.util.lang import to_str
 
 
-class AbstractJob(meta=ABCMeta):
+class AbstractJob(metaclass=ABCMeta):
 
     """描述一个Job
        实现的其它Job均需要继承该类
@@ -53,12 +50,6 @@ class AbstractJob(meta=ABCMeta):
         """当Job执行出现异常时，执行此动作
         """
         pass
-
-    def __repr__(self):
-        return to_str(self, "name", "description")
-
-    def __str__(self):
-        return self.__repr__()
 
 
 class JobStatus:
@@ -108,16 +99,6 @@ class JobInstance:
         else:
             self.updated_on = updated_on
 
-    def __repr__(self):
-        return to_str(self,
-                      "id", "flow_instance_id", "status",
-                      "trigger_actor",
-                      ("created_on", common_fmt_dt),
-                      ("updated_on", common_fmt_dt))
-
-    def __str__(self):
-        return self.__repr__()
-
 
 class JobActionData:
 
@@ -151,11 +132,20 @@ class JobActionData:
 
         self.finished_on = finished_on
 
-    def __repr__(self):
-        return to_str(self, "id", "job_instance_id", "action", "actor",
-                      ("arguments", ujson.dumps), ("data", ujson.dumps),
-                      ("created_on", common_fmt_dt),
-                      ("finished_on", common_fmt_dt))
 
-    def __str__(self):
-        return self.__repr__()
+class JobRef:
+
+    """还对象用于在FlowMeta等声明中引用一个Job
+    """
+
+    def __init__(self, name, **bind_args):
+        self._name = name
+        self._bind_args = bind_args if bind_args is not None else {}
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def bind_args(self):
+        return self._bind_args

@@ -1,18 +1,22 @@
 """本模块包含跟用户相关的Facade接口
 """
 
-
-def login(username, password):
-    pass
+from easemob_flow.core.service import AbstractService
 
 
-def check_token(token):
-    pass
+class UserService(AbstractService):
 
+    def __init__(self, service_container):
+        super().__init__(service_container)
 
-def logout(token):
-    pass
+    def login(self, username, password):
+        pass
 
+    def check_token(self, token):
+        pass
 
-def profile(user_id):
-    pass
+    def logout(self, token):
+        pass
+
+    def profile(self, user_id):
+        pass

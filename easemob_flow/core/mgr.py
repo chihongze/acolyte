@@ -1,12 +1,13 @@
 import pkg_resources
 from abc import ABCMeta, abstractmethod
 from easemob_flow.exception import (
-    EasemobFlowException,
-    UnsupportOperationException
+    UnsupportOperationException,
+    ObjectAlreadyExistedException,
+    ObjectNotFoundException
 )
 
 
-class AbstractManager(meta=ABCMeta):
+class AbstractManager(metaclass=ABCMeta):
 
     def __init__(self):
         pass
@@ -70,7 +71,7 @@ class DictBasedManager(AbstractManager):
         self._container = {}
 
     def load(self):
-        raise UnsupportOperationException(DictBasedManager, "load")
+        raise UnsupportOperationException.build(DictBasedManager, "load")
 
     def register(self, name, obj):
         if name in self._container:
@@ -87,7 +88,7 @@ class DictBasedManager(AbstractManager):
         return self._container.values()
 
 
-class EntryPointManager(AbstractManager):
+class EntryPointManager(DictBasedManager):
 
     def __init__(self, entry_point):
         super().__init__()
@@ -96,27 +97,9 @@ class EntryPointManager(AbstractManager):
 
     def load(self):
         for ep in pkg_resources.iter_entry_points(self._entry_point):
-            self._container[ep.name] = ep.load()
+            obj = ep.load()
+            self._container[obj.name] = obj
 
 # managers for job and flow_meta
 job_manager = EntryPointManager("easemob_flow.job")
 flow_meta_manager = EntryPointManager("easemob_flow.flow_meta")
-
-
-class ObjectNotFoundException(EasemobFlowException):
-
-    """找不到对象
-    """
-
-    def __init__(self, object_name):
-        super().__init__("Object '{name}' not found.".format(name=object_name))
-
-
-class ObjectAlreadyExistedException(EasemobFlowException):
-
-    """重复在同一个manager当中注册相同的对象时抛出此异常
-    """
-
-    def __init__(self, object_name):
-        super().__init__(
-            "Object '{name}' already registered.".format(name=object_name))

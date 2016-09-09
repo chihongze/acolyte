@@ -1,8 +1,27 @@
-import ujson
-from easemob_flow.util.lang import to_str
+from abc import ABCMeta
 
 
-class Result:
+class AbstractService(metaclass=ABCMeta):
+
+    def __init__(self, service_container):
+        self._service_container = service_container
+
+    @property
+    def container(self):
+        return self._service_container
+
+    def service(self, service_id):
+        return self.container.get_service(service_id)
+
+
+class ViewObject(metaclass=ABCMeta):
+
+    """ViewObject用做最终输出的视图对象，可以直接序列化为json
+    """
+    pass
+
+
+class Result(ViewObject):
 
     """该对象用来统一接口返回结果
     """
@@ -42,30 +61,7 @@ class Result:
         :param msg: 错误信息
         :param data: 携带数据
         """
-        self._status_code = status_code
-        self._reason = reason
-        self._msg = msg
-        self._data = data
-
-    @property
-    def status_code(self):
-        return self._status_code
-
-    @property
-    def reason(self):
-        return self._reason
-
-    @property
-    def msg(self):
-        return self._msg
-
-    @property
-    def data(self):
-        return self._data
-
-    def __repr__(self):
-        return to_str(self, "status_code", "reason", "msg",
-                      ("data", ujson.dumps))
-
-    def __str__(self):
-        return self.__repr__()
+        self.status_code = status_code
+        self.reason = reason
+        self.msg = msg
+        self.data = data

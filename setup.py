@@ -3,9 +3,10 @@ from easemob_flow import VERSION
 
 install_requires = [
     "flask >= 0.11",
-    "ujson >= 1.35",
+    "simplejson >= 3.8.2",
     "PyMySQL >= 0.7.9",
     "fixtures >= 3.0.0",
+    "termcolor >= 1.1.0",
 ]
 
 setuptools.setup(

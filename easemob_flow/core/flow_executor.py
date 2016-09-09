@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 
-class AbstractFlowExecutor(meta=ABCMeta):
+class AbstractFlowExecutor(metaclass=ABCMeta):
 
     def __init__(self):
         pass
