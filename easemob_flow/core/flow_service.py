@@ -73,7 +73,7 @@ class FlowService(AbstractService):
         self._job_mgr = self.service("job_manager")
 
     def get_all_flow_meta(self):
-        """获得所有的flow_meta信息
+        """获得所有注册到容器的flow_meta信息
         """
         all_flow_meta = [
             FlowMetaView.from_flow_meta(meta, self._job_mgr)
@@ -81,7 +81,7 @@ class FlowService(AbstractService):
         ]
         return Result.ok(data=all_flow_meta)
 
-    def get_flow_meta_info(self, flow_meta):
+    def get_flow_meta_info(self, flow_meta_name):
         """获取单个的flow_meta详情
         """
         return None
