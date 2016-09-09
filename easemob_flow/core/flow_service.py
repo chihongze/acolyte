@@ -1,25 +1,46 @@
 """本模块包含跟flow相关的facade接口
 """
 
-from easemob_flow.core.service import AbstractService, Result
+from easemob_flow.core.service import (
+    AbstractService,
+    ViewObject,
+    Result
+)
 
 
-class JobSimpleView:
+class JobArgView(ViewObject):
+
+    @classmethod
+    def from_job_arg(cls, job_arg):
+        return cls(job_arg.name, job_arg.type_name, job_arg.comment)
+
+    def __init__(self, name, type_name, comment):
+        self.name = name
+        self.type = type_name
+        self.comment = comment
+
+
+class JobSimpleView(ViewObject):
 
     @classmethod
     def from_job(cls, job):
-        return cls(job.name, job.description)
+        job_args = {event: [
+            JobArgView.from_job_arg(arg)
+            for arg in job.job_args[
+                event]] for event in job.job_args}
+        return cls(job.name, job.description, job_args)
 
-    def __init__(self, name, description):
+    def __init__(self, name, description, job_args):
         """
         :param name: Job名称
         :param description: 描述
         """
         self.name = name
         self.description = description
+        self.job_args = job_args
 
 
-class FlowMetaView:
+class FlowMetaView(ViewObject):
 
     @classmethod
     def from_flow_meta(cls, flow_meta, job_mgr):
@@ -47,6 +68,7 @@ class FlowService(AbstractService):
         super().__init__(service_container)
 
     def _after_register(self):
+        # 注入两个manager
         self._flow_meta_mgr = self.service("flow_meta_manager")
         self._job_mgr = self.service("job_manager")
 

@@ -8,6 +8,7 @@ def _default(obj):
     return obj.__dict__
 
 
-def to_json(obj, sort_keys=False, indent=None):
+def to_json(obj, sort_keys=False, indent=None, ensure_ascii=False):
     return simplejson.dumps(obj, default=_default,
-                            sort_keys=sort_keys, indent=indent)
+                            sort_keys=sort_keys, indent=indent,
+                            ensure_ascii=ensure_ascii)
