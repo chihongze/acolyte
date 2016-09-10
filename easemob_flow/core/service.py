@@ -1,9 +1,12 @@
+import locale
 from abc import ABCMeta
+from easemob_flow.core.message import messages
 
 
 class AbstractService(metaclass=ABCMeta):
 
-    def __init__(self, service_container):
+    def __init__(self, service_id, service_container):
+        self._service_id = service_id
         self._service_container = service_container
 
     @property
@@ -12,6 +15,16 @@ class AbstractService(metaclass=ABCMeta):
 
     def service(self, service_id):
         return self.container.get_service(service_id)
+
+    def msg(self, service_method, reason, **args):
+        """拼装提示消息
+        """
+        country_code, _ = locale.getlocale(locale.LC_ALL)
+        msg = messages[country_code][self._service_id][service_method][reason]
+        if not args:
+            return msg
+        else:
+            return msg.format(**args)
 
 
 class ViewObject(metaclass=ABCMeta):

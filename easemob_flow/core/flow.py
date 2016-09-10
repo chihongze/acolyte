@@ -8,8 +8,8 @@ class FlowMeta(metaclass=ABCMeta):
        每个流程都可以抽象成flow meta，比如工程更新、SQL审核、机器审核等等
     """
 
-    def __init__(self, name, jobs, start_args=None, stop_args=None,
-                 description=""):
+    def __init__(self, name: str, jobs: list, start_args: dict=None,
+                 stop_args: dict=None, description: str=""):
         """
         :param name: flow meta名称
         :param jobs: 包含的JobRef对象列表
@@ -77,8 +77,9 @@ class FlowMeta(metaclass=ABCMeta):
 
 class FlowTemplate:
 
-    def __init__(self, id_, flow_meta, name, bind_args, max_run_instance,
-                 creator, created_on):
+    def __init__(self, id_: int, flow_meta: str, name: str, bind_args: dict,
+                 max_run_instance: int, creator: int,
+                 created_on: datetime.datetime):
         """根据FlowMeta来生成的Flow模板
            :param flow_meta: 使用的flow_meta
            :param name: 模板名称
@@ -117,9 +118,10 @@ class FlowInstance:
     """描述flow template的运行实例
     """
 
-    def __init__(self, id_, flow_template_id, initiator,
-                 current_step=None, status=FlowStatus.STATUS_WAITING,
-                 description=None, created_on=None, updated_on=None):
+    def __init__(self, id_: int, flow_template_id: int, initiator: int,
+                 current_step: str=None, status: str=FlowStatus.STATUS_WAITING,
+                 description: str=None, created_on: datetime.datetime=None,
+                 updated_on: datetime.datetime=None):
         """
         :param id_: 每个flow运行实例都会有一个唯一ID
         :param flow_template_id: 所属的flow_template

@@ -1,3 +1,4 @@
+import types
 import datetime
 from abc import (
     ABCMeta,
@@ -11,7 +12,7 @@ class AbstractJob(metaclass=ABCMeta):
        实现的其它Job均需要继承该类
     """
 
-    def __init__(self, name, description, job_args=None):
+    def __init__(self, name: str, description: str, job_args: dict=None):
         """
         :param name: Job名称
         :param description: Job描述
@@ -79,8 +80,9 @@ class JobInstance:
     """描述一个Job的运行状态
     """
 
-    def __init__(self, id_, flow_instance_id, status,
-                 trigger_actor, created_on=None, updated_on=None):
+    def __init__(self, id_: int, flow_instance_id: int, status: str,
+                 trigger_actor: int, created_on: datetime.datetime=None,
+                 updated_on: datetime.datetime=None):
         """
         :param id_: 每个Job的运行实例有一个编号
         :param flow_instance_id: 隶属的flow_instance
@@ -111,8 +113,12 @@ class JobActionData:
     """记录Job每一个Action执行的数据
     """
 
-    def __init__(self, id_, job_instance_id, action, actor,
-                 arguments, data, created_on=None, finished_on=None):
+    def __init__(self,
+                 id_: int, job_instance_id: int,
+                 action: str, actor: int,
+                 arguments: dict, data: dict,
+                 created_on: datetime.datetime=None,
+                 finished_on: datetime.datetime=None):
         """
         :param id_: Action实例编号
         :param job_instance_id: 隶属的job instance
@@ -144,7 +150,7 @@ class JobRef:
     """还对象用于在FlowMeta等声明中引用一个Job
     """
 
-    def __init__(self, name, **bind_args):
+    def __init__(self, name: str, **bind_args: dict):
         self._name = name
         self._bind_args = bind_args if bind_args is not None else {}
 
@@ -181,8 +187,10 @@ class JobArg:
         TYPE_DICT: (dict, None)
     }
 
-    def __init__(self, name, type_name, comment, required=True, default="",
-                 value_of=None, check_logic=None):
+    def __init__(self, name: str, type_name: str, comment: str,
+                 required: bool=True, default: object="",
+                 value_of: types.FunctionType=None,
+                 check_logic: types.FunctionType=None):
         """
         :param name:参数名称
         :param type_name: 类型名称

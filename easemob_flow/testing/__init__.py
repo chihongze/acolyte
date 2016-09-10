@@ -5,6 +5,8 @@ from easemob_flow.testing.core.mgr_define import (
     flow_meta_mgr,
     job_mgr
 )
+from easemob_flow.util import db
+from easemob_flow.util.json import to_json
 from easemob_flow.core.flow_service import FlowService
 
 
@@ -15,9 +17,14 @@ class UnitTestBootstrap(AbstractBootstrap):
 
     def start(self, config):
         self.service_container = ServiceContainer()
-        self._binding(self.service_container)
+        self._binding(config, self.service_container)
 
-    def _binding(self, service_container):
+    def _binding(self, config, service_container):
+
+        service_container.register(
+            service_id="db",
+            service_obj=self._init_db(config)
+        )
 
         service_container.register(
             service_id="job_manager",
@@ -36,6 +43,20 @@ class UnitTestBootstrap(AbstractBootstrap):
 
         service_container.after_register()
 
+    def _init_db(self, config):
+        db_pool_cfg = config.get("db_pool", {})
+        max_pool_size = db_pool_cfg.get("pool_size", 10)
+
+        db_connect_cfg = config.get("db", {
+            "host": "localhost",
+            "port": 3306,
+            "user": "root",
+            "password": "",
+            "db": "easemob_flow",
+        })
+
+        return db.ConnectionPool(db_connect_cfg, max_pool_size)
+
 _test_bootstrap = UnitTestBootstrap()
 _test_bootstrap.start({})
 _test_container = _test_bootstrap.service_container
@@ -48,3 +69,6 @@ class EasemobFlowTestCase(fixtures.TestWithFixtures):
         """
         global _test_container
         return _test_container.get_service(service_id)
+
+    def print_json(self, obj):
+        print(to_json(obj, indent=4 * ' '))

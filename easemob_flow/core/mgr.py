@@ -45,10 +45,10 @@ class ManagerChain(AbstractManager):
     def load(self):
         map(lambda mgr: mgr.load(), self._mgr_list)
 
-    def register(self, name, obj):
+    def register(self, name: str, obj: object):
         raise UnsupportOperationException.build(ManagerChain, "register")
 
-    def get(self, name):
+    def get(self, name: str) -> object:
         for mgr in self._mgr_list:
             try:
                 return mgr.get(name)
@@ -90,7 +90,7 @@ class DictBasedManager(AbstractManager):
 
 class EntryPointManager(DictBasedManager):
 
-    def __init__(self, entry_point):
+    def __init__(self, entry_point: str):
         super().__init__()
         self._entry_point = entry_point
         self._container = {}

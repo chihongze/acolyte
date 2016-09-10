@@ -7,7 +7,7 @@ from easemob_flow.core.service import AbstractService
 class JobService(AbstractService):
 
     def __init__(self, service_container):
-        super().__init__(service_container)
+        super().__init__("job_service", service_container)
 
     def get_all_job_definations(self):
         """获取所有的Job定义

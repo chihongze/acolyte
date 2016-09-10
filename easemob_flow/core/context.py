@@ -15,7 +15,7 @@ class AbstractFlowContext(collections.Mapping, metaclass=ABCMeta):
         super().__init__()
 
     @abstractmethod
-    def save(self, data):
+    def save(self, data: dict):
         pass
 
     @abstractproperty

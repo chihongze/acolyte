@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
   id int primary key auto_increment comment "用户ID",
   email varchar(255) unique not null comment "邮箱",
+  password char(40) not null comment "密码",
   name varchar(20) not null comment "姓名",
   role int not null comment "角色",
   created_on datetime not null comment "创建时间",

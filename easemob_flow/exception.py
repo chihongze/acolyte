@@ -51,5 +51,14 @@ class InvalidStatusException(EasemobFlowException):
     """操作状态发生问题时抛出此异常
     """
 
-    def __init__(self, object_name):
-        pass
+    def __init__(self, msg):
+        super().__init__(msg)
+
+
+class InvalidArgumentException(EasemobFlowException):
+
+    """当传递的参数不合法时抛出此异常
+    """
+
+    def __init__(self, msg):
+        super().__init__(msg)

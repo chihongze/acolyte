@@ -32,7 +32,7 @@ class EasemobFlowBootstrap(AbstractBootstrap):
     def __init__(self):
         super().__init__()
 
-    def start(self, config):
+    def start(self, config: dict):
         """在这里对各种组件进行初始化
            :param config: 配置数据，字典套字典什么的
         """
@@ -54,12 +54,12 @@ class EasemobFlowBootstrap(AbstractBootstrap):
         service_container = ServiceContainer()
         self._service_binding(service_container)
 
-    def _service_binding(self, service_container):
+    def _service_binding(self, service_container: ServiceContainer):
         """将服务绑定到注册容器
         """
 
         service_container.register(
-            service_id="db_pool",
+            service_id="db",
             service_obj=self._pool
         )
 
