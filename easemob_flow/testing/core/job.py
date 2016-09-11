@@ -1,6 +1,6 @@
 import simplejson as json
 import traceback
-from easemob_flow.core.job import AbstractJob, JobArg
+from easemob_flow.core.job import AbstractJob
 
 
 class EchoJob(AbstractJob):
@@ -11,16 +11,16 @@ class EchoJob(AbstractJob):
     def __init__(self):
         super().__init__("echo", "test job echo", job_args={
             "trigger": [
-                JobArg("a", JobArg.TYPE_INT, "a的值"),
-                JobArg("b", JobArg.TYPE_INT, "b的值"),
+                # JobArg("a", JobArg.TYPE_INT, "a的值"),
+                # JobArg("b", JobArg.TYPE_INT, "b的值"),
             ],
             "finish": [
-                JobArg("c", JobArg.TYPE_STRING, "c的值"),
-                JobArg("d", JobArg.TYPE_LIST, "d的值")
+                # JobArg("c", JobArg.TYPE_STRING, "c的值"),
+                # JobArg("d", JobArg.TYPE_LIST, "d的值")
             ],
             "stop": [
-                JobArg("e", JobArg.TYPE_FLOAT, "e的值"),
-                JobArg("f", JobArg.TYPE_DICT, "f的值")
+                # JobArg("e", JobArg.TYPE_FLOAT, "e的值"),
+                # JobArg("f", JobArg.TYPE_DICT, "f的值")
             ],
         })
 

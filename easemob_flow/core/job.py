@@ -1,9 +1,10 @@
-import types
+import typing
 import datetime
 from abc import (
     ABCMeta,
     abstractmethod
 )
+from easemob_flow.util.validate import Field
 
 
 class AbstractJob(metaclass=ABCMeta):
@@ -168,42 +169,45 @@ class JobArg:
     """参数声明
     """
 
-    TYPE_INT = "int"
+    # 参数类型
 
-    TYPE_FLOAT = "float"
+    MARK_AUTO = "auto"  # 自动变量，绑定参数值可以被运行时参数值所覆盖
 
-    TYPE_STRING = "string"
+    MARK_CONST = "const"  # const类型的参数的值自FlowMeta指定后就不在变了
 
-    TYPE_LIST = "list"
+    MARK_STATIC = "static"  # static类型的参数值自FlowInstance指定后就不再变了
 
-    TYPE_DICT = "dict"
-
-    # value: (类型, 默认的value_of函数)
-    _TYPES = {
-        TYPE_INT: (int, int),
-        TYPE_FLOAT: (float, float),
-        TYPE_STRING: (str, str),
-        TYPE_LIST: (list, None),
-        TYPE_DICT: (dict, None)
-    }
-
-    def __init__(self, name: str, type_name: str, comment: str,
-                 required: bool=True, default: object="",
-                 value_of: types.FunctionType=None,
-                 check_logic: types.FunctionType=None):
+    def __init__(self, name: str, field_info: Field,
+                 mark: str, comment: str, value: typing.Any):
         """
-        :param name:参数名称
-        :param type_name: 类型名称
-        :param comment: 参数说明
-        :param required: 是否必须
-        :param default: 默认值
-        :param value_of: 转换函数，如果传递的类型不一致，会试图通过该函数转换
-        :param check_logic: 检查逻辑
+        :param name: 参数名称
+        :param field_info: 字段类型以及验证属性
+        :param mark: 字段标记 auto、const、static
+        :param comment: 说明
+        :param value: FlowMeta声明时绑定的值
         """
-        self.name = name
-        self.type_name = type_name
-        self.comment = comment
-        self.required = required
-        self.default = default
-        self.value_of = value_of
-        self.check_logic = check_logic
+        self._name = name
+        self._field_info = field_info
+        self._mark = mark
+        self._comment = comment
+        self._value = value
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def field_info(self):
+        return self._field_info
+
+    @property
+    def mark(self):
+        return self._mark
+
+    @property
+    def comment(self):
+        return self._comment
+
+    @property
+    def value(self):
+        return self._value
