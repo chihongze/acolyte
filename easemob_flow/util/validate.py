@@ -4,8 +4,12 @@ from functools import wraps
 from typing import Any
 from types import FunctionType
 from easemob_flow.exception import EasemobFlowException
-from easemob_flow.core.message import messages
+from easemob_flow.core.message import (
+    messages,
+    default_validate_messages
+)
 from easemob_flow.core.service import Result
+from easemob_flow.util.lang import get_from_nested_dict
 
 
 class Field:
@@ -67,7 +71,7 @@ class Field:
             if self._value_of is not None:
                 try:
                     value = self._value_of(value)
-                except (TypeError, ValueError):
+                except Exception:
                     raise InvalidFieldException(
                         self._name, value, "invalid_type", self._type)
             else:
@@ -79,7 +83,7 @@ class Field:
     def _customize_check(self, value):
         """自定义检查，子类可以实现
         """
-        pass
+        ...
 
 
 class IntField(Field):
@@ -206,7 +210,26 @@ class InvalidFieldException(EasemobFlowException):
         return self._expect
 
 
-def check(*fields, messages=messages):
+class BadReq(Exception):
+
+    """被check修饰的服务接口抛出此异常，可以直接返回bad request result
+    """
+
+    def __init__(self, reason, **args):
+        self._reason = reason
+        self._args = args
+
+    @property
+    def reason(self):
+        return self._reason
+
+    @property
+    def args(self):
+        return self._args
+
+
+def check(*fields, messages=messages,
+          default_validate_messages=default_validate_messages):
     """该decorator用在service对象方法上验证参数
        :param fields: 参数规则声明
        :pram messages: 消息集合
@@ -227,18 +250,39 @@ def check(*fields, messages=messages):
                 new_kwds = {arg_name: fields_dict[arg_name](arg_val)
                             for arg_name, arg_val in kwds.items()}
             except InvalidFieldException as e:
-                reason = "{field_name}_{reason}".format(
+                full_reason = "{field_name}_{reason}".format(
                     field_name=e.field_name, reason=e.reason)
                 loc, _ = locale.getlocale(locale.LC_ALL)
                 service_id = self.__class__.__name__
                 mtd_name = f.__name__
-                msg = messages[loc][service_id][mtd_name][reason]
-                if e.expect is not None or e.expect != "":
-                    msg = msg.format(expect=e.expect)
-                # 卧槽终于可以召唤神龙了
-                return Result.bad_request(reason, msg=msg)
+
+                # 先从用户messages集合中获取
+                msg = get_from_nested_dict(
+                    messages, loc, service_id, mtd_name, full_reason)
+                if msg is None:
+                    # 用户messages集合取不到再取默认的
+                    msg = default_validate_messages[loc][e.reason]
+                    if e.expect is not None or e.expect != "":
+                        msg = msg.format(
+                            field_name=e.field_name, expect=e.expect)
+                    else:
+                        msg = msg.format(field_name=e.field_name)
+                else:
+                    if e.expect is not None or e.expect != "":
+                        msg = msg.format(expect=e.expect)
+
+                return Result.bad_request(full_reason, msg=msg)
             else:
-                return f(self, *new_args, **new_kwds)
+                try:
+                    return f(self, *new_args, **new_kwds)
+                except BadReq as e:
+                    loc, _ = locale.getlocale(locale.LC_ALL)
+                    msg = messages[loc][
+                        self.__class__.__name__][f.__name__][e.reason]
+                    if e.args:
+                        msg = msg.format(**e.args)
+
+                    return Result.bad_request(e.reason, msg=msg)
 
         return _func
 

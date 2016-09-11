@@ -47,10 +47,18 @@ class ConnectionPool:
                 return cursor.fetchone()
             return None
         result = self.cursor_callback(callback)
+        if result is None:
+            return result
 
         if mapper is None:
             return result
         return mapper(result)
+
+    def query_one_field(self, sql, args):
+        record = self.query_one(sql, args)
+        if not record:
+            return None
+        return record.values()[0]
 
     def query_all(self, sql, args, mapper=None):
 
@@ -78,7 +86,9 @@ class ConnectionPool:
     def cursor_callback(self, callback):
         with self.connection() as conn:
             with conn.cursor() as cursor:
-                return callback(cursor)
+                rs = callback(cursor)
+                conn.commit()
+                return rs
 
 
 class _PooledMySQLConnection:

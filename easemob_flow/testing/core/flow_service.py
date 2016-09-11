@@ -5,7 +5,7 @@ from easemob_flow.testing import EasemobFlowTestCase
 class FlowServiceTestCase(EasemobFlowTestCase):
 
     def setUp(self):
-        self.flow_service = self._service("flow_service")
+        self.flow_service = self._("FlowService")
 
     def test_get_all_flow_meta(self):
         result = self.flow_service.get_all_flow_meta()

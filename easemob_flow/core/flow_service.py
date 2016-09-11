@@ -3,6 +3,13 @@
 
 import simplejson as json
 import datetime
+from easemob_flow.util.validate import (
+    Field,
+    IntField,
+    StrField,
+    check,
+    BadReq
+)
 from easemob_flow.core.service import (
     AbstractService,
     ViewObject,
@@ -72,13 +79,13 @@ class FlowMetaView(ViewObject):
 class FlowService(AbstractService):
 
     def __init__(self, service_container):
-        super().__init__("flow_service", service_container)
+        super().__init__(service_container)
 
     def _after_register(self):
         # 注入两个manager
-        self._flow_meta_mgr = self.service("flow_meta_manager")
-        self._job_mgr = self.service("job_manager")
-        db = self.service("db")
+        self._flow_meta_mgr = self._("flow_meta_manager")
+        self._job_mgr = self._("job_manager")
+        db = self._("db")
         self._flow_tpl_dao = FlowTemplateDAO(db)
         self._user_dao = UserDAO(db)
 
@@ -91,54 +98,53 @@ class FlowService(AbstractService):
         ]
         return Result.ok(data=all_flow_meta)
 
-    def get_flow_meta_info(self, flow_meta_name: str) -> Result:
+    @check(
+        StrField("flow_meta_name", required=True),
+    )
+    def get_flow_meta_info(self, flow_meta_name) -> Result:
         """获取单个的flow_meta详情
         """
 
         try:
             flow_meta = self._flow_meta_mgr.get(flow_meta_name)
         except ObjectNotFoundException:
-            return Result.bad_request(
-                "flow_meta_not_exist",
-                msg=self.msg("get_flow_meta_info", "flow_meta_not_exist",
-                             flow_meta=flow_meta_name))
+            raise BadReq("flow_meta_not_exist", flow_meta=flow_meta_name)
 
         return Result.ok(data=FlowMetaView.from_flow_meta(
             flow_meta, self._job_mgr))
 
-    def create_flow_template(self, flow_meta: str, name: str, bind_args: dict,
-                             max_run_instance: int, creator: int) -> Result:
+    @check(
+        StrField("flow_meta", required=True),
+        StrField("name", required=True, min_len=3, max_len=50,
+                 regex="^[a-zA-Z0-9_]+$"),
+        Field("bind_args", type_=dict, required=True, value_of=json.loads),
+        IntField("max_run_instance", required=True, min_=0),
+        IntField("creator", required=True)
+    )
+    def create_flow_template(self, flow_meta_name, name, bind_args,
+                             max_run_instance, creator) -> Result:
         """创建flow_template
         """
 
-        _mtd = "create_flow_template"
-
-        # 检查max_run_instance
-        if max_run_instance < 0:
-            return Result.bad_request(_mtd, "invalid_max_run_instance",
-                                      max_run_instance=max_run_instance)
-
         # 获取flow_meta以及检查其存在性
         try:
-            self._flow_meta_mgr.get(flow_meta)
+            self._flow_meta_mgr.get(flow_meta_name)
         except ObjectNotFoundException:
-            return Result.bad_request(_mtd, "flow_meta_not_exist",
-                                      flow_meta=flow_meta)
+            raise BadReq("flow_meta_not_exist", flow_meta=flow_meta_name)
 
         # 检查name是否已经存在
         if self._flow_tpl_dao.is_name_existed(name):
-            return Result.bad_reques(_mtd, "name_already_exist", name=name)
+            raise BadReq("name_already_exist", name=name)
 
         # 检查creator是否存在
         if not self._user_dao.is_name_existed(creator):
-            return Result.bad_request(_mtd, "invalid_creator_id",
-                                      creator=creator)
+            raise BadReq("invalid_creator_id", creator=creator)
 
         created_on = datetime.datetime.now()
 
         # 插入吧!
         self._flow_tpl_dao.insert_flow_template(
-            flow_meta, name, json.dumps(bind_args),
+            flow_meta_name, name, json.dumps(bind_args),
             max_run_instance, creator, created_on)
 
     def get_all_flow_templates(self):

@@ -1,8 +1,10 @@
 from easemob_flow.exception import (
     EasemobFlowException,
     ObjectAlreadyExistedException,
-    ObjectNotFoundException
+    ObjectNotFoundException,
+    InvalidArgumentException
 )
+from easemob_flow.core.service import AbstractService
 
 
 class ServiceContainer:
@@ -29,6 +31,23 @@ class ServiceContainer:
         if not lazy:
             service_defination.init()
         self._container[service_id] = service_defination
+
+    def register_service(self, service_class, init_callback=None, lazy=False):
+        """该方法专门用于facade服务对象的注册
+           :param service_class: 服务对象类型
+           :param init_callback: 初始化函数
+           :param lazy: 是否是懒加载
+        """
+        if not issubclass(service_class, AbstractService):
+            raise InvalidArgumentException(
+                "the service class must be the subclass of AbstractService")
+
+        self.register(
+            service_id=service_class.__name__,
+            service_obj=service_class(self),
+            init_callback=init_callback,
+            lazy=lazy
+        )
 
     def get_service(self, service_id):
         """从容器中获取服务

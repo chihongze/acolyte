@@ -62,3 +62,19 @@ class ToStrTestCase(EasemobFlowTestCase):
     def _check_parts_num(self, string, expected_num):
         parts = PATTERN.search(string).group(1).split(',')
         self.assertEqual(len(parts), expected_num)
+
+
+class GetFromNestedDictTestCase:
+
+    def testCommon(self):
+        d = {
+            "a": {
+                "b": {
+                    "c": {
+                        "e": 2
+                    }
+                }
+            }
+        }
+        self.assertEqual(lang.get_from_nested_dict(d, "a", "b", "c", "e"), 2)
+        self.assertIsNone(lang.get_from_nested_dict(d, "a", "h"), None)

@@ -7,7 +7,10 @@ from easemob_flow.testing.core.mgr_define import (
 )
 from easemob_flow.util import db
 from easemob_flow.util.json import to_json
+from easemob_flow.core.service import Result
 from easemob_flow.core.flow_service import FlowService
+from easemob_flow.core.user_service import UserService
+from easemob_flow.core.job_service import JobService
 
 
 class UnitTestBootstrap(AbstractBootstrap):
@@ -36,10 +39,9 @@ class UnitTestBootstrap(AbstractBootstrap):
             service_obj=flow_meta_mgr
         )
 
-        service_container.register(
-            service_id="flow_service",
-            service_obj=FlowService(service_container)
-        )
+        service_container.register_service(FlowService)
+        service_container.register_service(UserService)
+        service_container.register_service(JobService)
 
         service_container.after_register()
 
@@ -64,7 +66,7 @@ _test_container = _test_bootstrap.service_container
 
 class EasemobFlowTestCase(fixtures.TestWithFixtures):
 
-    def _service(self, service_id):
+    def _(self, service_id):
         """从容器中获取服务
         """
         global _test_container
@@ -72,3 +74,10 @@ class EasemobFlowTestCase(fixtures.TestWithFixtures):
 
     def print_json(self, obj):
         print(to_json(obj, indent=4 * ' '))
+
+    def assertResultSuccess(self, result):
+        self.assertEqual(result.status_code, Result.STATUS_SUCCESS)
+
+    def assertResultBadRequest(self, result, reason):
+        self.assertEqual(result.status_code, Result.STATUS_BADREQUEST)
+        self.assertEqual(result.reason, reason)

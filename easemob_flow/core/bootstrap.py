@@ -9,6 +9,8 @@ from easemob_flow.core.mgr import (
     flow_meta_manager
 )
 from easemob_flow.core.flow_service import FlowService
+from easemob_flow.core.user_service import UserService
+from easemob_flow.core.job_service import JobService
 
 
 class AbstractBootstrap(metaclass=ABCMeta):
@@ -75,9 +77,9 @@ class EasemobFlowBootstrap(AbstractBootstrap):
             init_callback=lambda service_obj: service_obj.load()
         )
 
-        service_container.register(
-            service_id="flow_service",
-            service_obj=FlowService(service_container)
-        )
+        # 注册各种Service
+        service_container.register_service(FlowService)
+        service_container.register_service(UserService)
+        service_container.register_service(JobService)
 
         service_container.after_register()

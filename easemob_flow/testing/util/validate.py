@@ -4,7 +4,8 @@ from easemob_flow.util.validate import (
     IntField,
     StrField,
     InvalidFieldException,
-    check
+    BadReq,
+    check,
 )
 
 
@@ -134,20 +135,24 @@ class CheckDecoratorTestCase(EasemobFlowTestCase):
     """针对check decorator的测试
     """
 
-    def testCommon(self):
-        """测试check decorator的常规使用
-        """
-
-        messages = {
+    def setUp(self):
+        self.messages = {
             "C/zh_CN": {
                 "AService": {
                     "a": {
-                        "id_empty": "id参数不能为空",
-                        "id_less_than_min": "id参数不能小于{expect}"
+                    }
+                },
+                "BService": {
+                    "b": {
+                        "invalid_id": "不合法的ID值'{id}'"
                     }
                 }
             }
         }
+
+    def testCommon(self):
+        """测试check decorator的常规使用
+        """
 
         class AService:
 
@@ -156,7 +161,7 @@ class CheckDecoratorTestCase(EasemobFlowTestCase):
                 StrField("name", required=True, min_len=3, max_len=20),
                 StrField("grade", required=False, default="X",
                          regex=r'^[A-Z]$'),
-                messages=messages
+                messages=self.messages
             )
             def a(self, id: int, name: str, grade: str) -> typing.Tuple:
                 return id, name, grade
@@ -183,3 +188,23 @@ class CheckDecoratorTestCase(EasemobFlowTestCase):
         self.assertEqual(rs.status_code, 400)
         self.assertEqual(rs.reason, "id_less_than_min")
         self.assertEqual(rs.msg, "id参数不能小于6")
+
+    def testBadReq(self):
+        """测试BadReq异常
+        """
+
+        class BService:
+
+            @check(
+                IntField("id"),
+                messages=self.messages
+            )
+            def b(self, id):
+                if id < 1:
+                    raise BadReq("invalid_id", id=id)
+
+        b = BService()
+        rs = b.b(0)
+        self.assertEqual(rs.status_code, 400)
+        self.assertEqual(rs.reason, "invalid_id")
+        self.assertEqual(rs.msg, "不合法的ID值'0'")

@@ -43,3 +43,16 @@ def to_str(obj, *fields):
         class_name=obj.__class__.__name__,
         id_=id(obj)
     )
+
+
+def get_from_nested_dict(d, *keys):
+    """从嵌套字典中获取值，如果在某一层级获取不到，则返回None
+       :param d: 目标字典
+       :param keys: 层级key列表
+    """
+    for k in keys:
+        try:
+            d = d[k]
+        except KeyError:
+            return None
+    return d
