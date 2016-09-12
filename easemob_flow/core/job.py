@@ -177,20 +177,17 @@ class JobArg:
 
     MARK_STATIC = "static"  # static类型的参数值自FlowInstance指定后就不再变了
 
-    def __init__(self, name: str, field_info: Field,
-                 mark: str, comment: str, value: typing.Any):
+    def __init__(self, name: str, field_info: Field, mark: str, comment: str):
         """
         :param name: 参数名称
         :param field_info: 字段类型以及验证属性
         :param mark: 字段标记 auto、const、static
         :param comment: 说明
-        :param value: FlowMeta声明时绑定的值
         """
         self._name = name
         self._field_info = field_info
         self._mark = mark
         self._comment = comment
-        self._value = value
 
     @property
     def name(self):
@@ -207,7 +204,3 @@ class JobArg:
     @property
     def comment(self):
         return self._comment
-
-    @property
-    def value(self):
-        return self._value

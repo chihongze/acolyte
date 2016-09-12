@@ -40,6 +40,18 @@ class Field:
     def name(self):
         return self._name
 
+    @property
+    def type(self):
+        return self._type
+
+    @property
+    def required(self):
+        return self._required
+
+    @property
+    def default(self):
+        return self._default
+
     def __call__(self, value: Any) -> Any:
         """调用call完成对目标值的转换和检查
         """
@@ -110,6 +122,14 @@ class IntField(Field):
 
         self._min, self._max = min_, max_
 
+    @property
+    def min(self):
+        return self._min
+
+    @property
+    def max(self):
+        return self._max
+
     def _customize_check(self, value):
 
         # 比最小值还要小
@@ -150,6 +170,18 @@ class StrField(Field):
         )
         self._min_len, self._max_len = min_len, max_len
         self._regex = regex
+
+    @property
+    def min_len(self):
+        return self._min_len
+
+    @property
+    def max_len(self):
+        return self._max_len
+
+    @property
+    def regex(self):
+        return self._regex
 
     def _customize_check(self, value):
 

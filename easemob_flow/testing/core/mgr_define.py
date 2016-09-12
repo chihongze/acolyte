@@ -10,7 +10,7 @@ from easemob_flow.testing.core.job import (
     DJob,
 )
 from easemob_flow.core.mgr import DictBasedManager
-from easemob_flow.core.job import JobRef
+from easemob_flow.core.job import JobRef, JobArg
 from easemob_flow.core.flow import FlowMeta
 
 
@@ -23,18 +23,15 @@ class TestFlowMeta(FlowMeta):
             jobs=(
                 JobRef(
                     name="echo",
-                    trigger={
-                        "a": 1,
-                        "b": 2
-                    },
-                    finish={
-                        "c": "3",
-                        "d": ["a", "b", "c"]
-                    },
-                    stop={
-                        "e": 5.1,
-                        "f": {"a": 1, "b": "2", "c": 3}
-                    }
+                    trigger=[
+
+                    ],
+                    finish=[
+
+                    ],
+                    stop=[
+
+                    ]
                 ),
                 JobRef(
                     name="old_man",

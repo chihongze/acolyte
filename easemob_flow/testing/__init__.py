@@ -59,6 +59,7 @@ class UnitTestBootstrap(AbstractBootstrap):
 
         return db.ConnectionPool(db_connect_cfg, max_pool_size)
 
+
 _test_bootstrap = UnitTestBootstrap()
 _test_bootstrap.start({})
 _test_container = _test_bootstrap.service_container

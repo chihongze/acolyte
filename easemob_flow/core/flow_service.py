@@ -83,7 +83,7 @@ class FlowService(AbstractService):
             raise BadReq("name_already_exist", name=name)
 
         # 检查creator是否存在
-        if not self._user_dao.is_name_existed(creator):
+        if not self._user_dao.query_user_by_id(creator):
             raise BadReq("invalid_creator_id", creator=creator)
 
         created_on = datetime.datetime.now()

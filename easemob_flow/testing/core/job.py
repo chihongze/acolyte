@@ -1,6 +1,10 @@
 import simplejson as json
 import traceback
-from easemob_flow.core.job import AbstractJob
+from easemob_flow.core.job import (
+    AbstractJob,
+    JobArg,
+)
+from easemob_flow.util.validate import IntField, StrField
 
 
 class EchoJob(AbstractJob):
@@ -11,16 +15,20 @@ class EchoJob(AbstractJob):
     def __init__(self):
         super().__init__("echo", "test job echo", job_args={
             "trigger": [
-                # JobArg("a", JobArg.TYPE_INT, "a的值"),
-                # JobArg("b", JobArg.TYPE_INT, "b的值"),
+                JobArg("a", IntField("a", required=True),
+                       JobArg.MARK_CONST, "a的值"),
+                JobArg("b", IntField("b", required=True),
+                       JobArg.MARK_STATIC, "b的值"),
             ],
             "finish": [
-                # JobArg("c", JobArg.TYPE_STRING, "c的值"),
-                # JobArg("d", JobArg.TYPE_LIST, "d的值")
+                JobArg("c", IntField("c", required=True),
+                       JobArg.MARK_AUTO, "c的值")
             ],
             "stop": [
-                # JobArg("e", JobArg.TYPE_FLOAT, "e的值"),
-                # JobArg("f", JobArg.TYPE_DICT, "f的值")
+                JobArg("d", StrField("d", required=True, min_len=3),
+                       JobArg.MARK_AUTO, "d的值"),
+                JobArg("e", StrField("e", required=True, max_len=20),
+                       JobArg.MARK_AUTO, "e的值")
             ],
         })
 
