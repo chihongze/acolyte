@@ -5,7 +5,8 @@ from easemob_flow.testing import EasemobFlowTestCase
 class MySQLContextTestCase(EasemobFlowTestCase):
 
     def setUp(self):
-        self._flow_ctx = MySQLContext(self._("db"), 100086)
+        self._flow_ctx = MySQLContext(
+            self._("FlowExecutorService"), self._("db"), 100086)
 
     def testCommonOperation(self):
         """测试MySQLContext的各种常规操作

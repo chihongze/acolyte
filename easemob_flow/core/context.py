@@ -7,8 +7,9 @@ class AbstractFlowContext(collections.Mapping, metaclass=ABCMeta):
     """上下文对象用于在Flow运行中的Job之间传递数据
     """
 
-    def __init__(self):
+    def __init__(self, flow_executor):
         super().__init__()
+        self.__flow_executor = flow_executor
 
     def init(self):
         pass
@@ -16,13 +17,17 @@ class AbstractFlowContext(collections.Mapping, metaclass=ABCMeta):
     def destroy(self):
         pass
 
+    def stop(self):
+        self.__flow_executor.stop(self)
+
 
 class MySQLContext(AbstractFlowContext):
 
     """基于MySQL的上下文
     """
 
-    def __init__(self, db, flow_instance_id):
+    def __init__(self, flow_executor, db, flow_instance_id):
+        super().__init__(flow_executor)
         self._db = db
         self._flow_instance_id = flow_instance_id
 

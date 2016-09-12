@@ -1,3 +1,4 @@
+import simplejson as json
 from easemob_flow.util.service_container import ServiceContainer
 from easemob_flow.core.service import (
     AbstractService,
@@ -21,7 +22,7 @@ from easemob_flow.util.validate import (
 class FlowExecutorService(AbstractService):
 
     def __init__(self, service_container: ServiceContainer):
-        super().__init__("flow_executor_service", service_container)
+        super().__init__(service_container)
 
     def _after_register(self):
         # 获取各种所依赖的服务
@@ -35,7 +36,8 @@ class FlowExecutorService(AbstractService):
         IntField("flow_template_id", required=True),
         IntField("initiator", required=True),
         StrField("description", required=True, max_len=20),
-        Field("start_flow_args", type_=dict, required=False, default=None),
+        Field("start_flow_args", type_=dict, required=False,
+              default=None, value_of=json.loads),
     )
     def start_flow(self, flow_template_id: int, initiator: int,
                    description: str, start_flow_args: dict) -> Result:

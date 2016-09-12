@@ -11,6 +11,7 @@ from easemob_flow.core.service import Result
 from easemob_flow.core.flow_service import FlowService
 from easemob_flow.core.user_service import UserService
 from easemob_flow.core.job_service import JobService
+from easemob_flow.core.flow_executor_service import FlowExecutorService
 
 
 class UnitTestBootstrap(AbstractBootstrap):
@@ -42,6 +43,7 @@ class UnitTestBootstrap(AbstractBootstrap):
         service_container.register_service(FlowService)
         service_container.register_service(UserService)
         service_container.register_service(JobService)
+        service_container.register_service(FlowExecutorService)
 
         service_container.after_register()
 
