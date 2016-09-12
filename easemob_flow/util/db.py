@@ -58,7 +58,7 @@ class ConnectionPool:
         record = self.query_one(sql, args)
         if not record:
             return None
-        return record.values()[0]
+        return tuple(record.values())[0]
 
     def query_all(self, sql, args, mapper=None):
 

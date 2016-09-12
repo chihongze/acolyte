@@ -48,8 +48,9 @@ class FlowExecutorService(AbstractService):
            S2. 检查并合并参数
            S3. 检查max_run_instance
            S4. 创建一条新的flow_instance记录
-           S5. 回调flow meta中on_start方法的逻辑
-           S6. 回调第一个Job的trigger事件
+           S5. 创建context
+           S6. 回调flow meta中on_start方法的逻辑
+           S7. 回调第一个Job的trigger事件
 
            :param flow_template_id: 使用的flow template
            :param initiator: 发起人
@@ -67,6 +68,10 @@ class FlowExecutorService(AbstractService):
         flow_meta = self._flow_meta_mgr.get(flow_template.flow_meta)
         if flow_meta is None:
             raise BadReq("invalid_flow_meta", flow_meta=flow_meta)
+
+        # 检查并合并start_flow_args
+
+        # 检查并合并first_job_trigger_args
 
     def next_job(self, flow_instance_id: int, current_job_finish_args: dict,
                  new_job_trigger_args: dict) -> Result:
