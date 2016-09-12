@@ -26,7 +26,8 @@ class TestFlowMeta(FlowMeta):
             description="just a test flow",
             jobs=(
                 JobRef(
-                    name="echo",
+                    step_name="echo",
+                    job_name="echo",
                     trigger={
 
                     },
@@ -38,13 +39,16 @@ class TestFlowMeta(FlowMeta):
                     }
                 ),
                 JobRef(
-                    name="old_man",
+                    step_name="old_man",
+                    job_name="old_man"
                 ),
                 JobRef(
-                    name="job_A"
+                    step_name="job_A",
+                    job_name="job_A"
                 ),
                 JobRef(
-                    name="job_B"
+                    step_name="job_B",
+                    job_name="job_B"
                 ),
             ),
             start_args={

@@ -1,5 +1,4 @@
 import simplejson as json
-import traceback
 from easemob_flow.core.job import (
     AbstractJob,
     JobArg,
@@ -37,19 +36,6 @@ class EchoJob(AbstractJob):
             json.dumps(arguments)))
         return arguments
 
-    def on_finish(self, context, arguments):
-        print("on finish events, received args: {}".format(
-            json.dumps(arguments)))
-        return arguments
-
-    def on_stop(self, context, arguments):
-        print("on stop events, received args: {}".format(
-            json.dumps(arguments)))
-        return arguments
-
-    def on_exception(self, context, exc_type, exc_value, tb):
-        traceback.print_exception(exc_type, exc_value, tb)
-
 
 class OldManJob(AbstractJob):
 
@@ -62,22 +48,6 @@ class OldManJob(AbstractJob):
     def on_trigger(self, context, arguments):
         print("任何事情都要按照基本法，按照选举法！我没有要钦定！没有任何这个意思！")
         return "trigger"
-
-    def on_finish(self, context, arguments):
-        print("I'm angry!")
-        return "finish"
-
-    def on_stop(self, context, arguments):
-        print("你们啊！naive！")
-        return "stop"
-
-    def on_xxx(self, context, arguments):
-        print("你们这样子是不行的！我也是替你们捉急！")
-        return "xxx"
-
-    def on_exception(self, context, exc_type, exc_value, tb):
-        print("跑的比谁都快！")
-        return "exception"
 
 
 def letter_job_meta(letter):
@@ -95,10 +65,6 @@ def letter_job_meta(letter):
                 return method
 
             attrs["on_trigger"] = _make_method("trigger")
-            attrs["on_finish"] = _make_method("finish")
-            attrs["on_stop"] = _make_method("stop")
-            attrs["on_exception"] = \
-                lambda self, context, exc_type, exc_value, tb: "exception"
             attrs["__init__"] = lambda self: AbstractJob.__init__(
                 self, "job_" + letter, "job " + letter)
 

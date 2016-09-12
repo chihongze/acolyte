@@ -1,6 +1,6 @@
 import typing
 from abc import ABCMeta
-from easemob_flow.core.job import AbstractJob, JobArg
+from easemob_flow.core.job import JobArg
 from easemob_flow.core.flow import FlowMeta
 from easemob_flow.core.mgr import AbstractManager
 from easemob_flow.util.validate import (
@@ -43,11 +43,7 @@ class FlowMetaView(ViewObject):
            :param flow_meta: flow meta对象
            :param job_mgr: 用于获取Job对象
         """
-        jobs = [
-            JobSimpleView.from_job(
-                job_mgr.get(job_ref.name)
-            ) for job_ref in flow_meta.jobs
-        ]
+        jobs = [JobRefView.from_job_ref(job_ref) for job_ref in flow_meta.jobs]
         return cls(flow_meta.name, flow_meta.description, jobs)
 
     def __init__(self, name: str, description: str, jobs: list):
@@ -61,25 +57,22 @@ class FlowMetaView(ViewObject):
         self.jobs = jobs
 
 
-class JobSimpleView(ViewObject):
+class JobRefView(ViewObject):
 
     @classmethod
-    def from_job(cls, job: AbstractJob) -> ViewObject:
-        job_args = {event: [
-            JobArgView.from_job_arg(arg)
-            for arg in job.job_args[
-                event]] for event in job.job_args}
-        return cls(job.name, job.description, job_args)
+    def from_job_ref(cls, job_ref) -> ViewObject:
+        pass
 
-    def __init__(self, name: str, description: str, job_args: dict):
+    def __init__(self, step_name: str, job_name: str,
+                 bind_args: dict):
         """
-        :param name: Job名称
-        :param description: 描述
-        :param job_args: Job的参数声明
+        :param step_name: 步骤名称
+        :param job_name: Job名称
+        :param bind_args: 绑定参数
         """
-        self.name = name
-        self.description = description
-        self.job_args = job_args
+        self.step_name = step_name
+        self.job_name = job_name
+        self.bind_args = bind_args
 
 
 class FieldInfoView(ViewObject):

@@ -40,24 +40,6 @@ class AbstractJob(metaclass=ABCMeta):
         """
         pass
 
-    @abstractmethod
-    def on_finish(self, context, arguments):
-        """当工作单元结束时执行此动作
-        """
-        pass
-
-    @abstractmethod
-    def on_stop(self, context, arguments):
-        """当工作单元被终止时执行此动作
-        """
-        pass
-
-    @abstractmethod
-    def on_exception(self, context, exc_type, exc_val, tb):
-        """当Job执行出现异常时，执行此动作
-        """
-        pass
-
 
 class JobStatus:
 
@@ -150,13 +132,18 @@ class JobRef:
     """还对象用于在FlowMeta等声明中引用一个Job
     """
 
-    def __init__(self, name: str, **bind_args: dict):
-        self._name = name
+    def __init__(self, step_name: str, job_name: str, **bind_args: dict):
+        self._step_name = step_name
+        self._job_name = job_name
         self._bind_args = bind_args if bind_args is not None else {}
 
     @property
-    def name(self):
-        return self._name
+    def step_name(self):
+        return self._step_name
+
+    @property
+    def job_name(self):
+        return self._job_name
 
     @property
     def bind_args(self):
@@ -176,9 +163,11 @@ class JobArg:
 
     MARK_STATIC = "static"  # static类型的参数值自FlowInstance指定后就不再变了
 
-    def __init__(self, name: str, field_info: Field, mark: str, comment: str):
+    def __init__(self, name: str,
+                 field_info: Field, mark: str, comment: str):
         """
-        :param name: 参数名称
+        :param step_name: 当前步骤名称
+        :param job_name: 引用的job名称
         :param field_info: 字段类型以及验证属性
         :param mark: 字段标记 auto、const、static
         :param comment: 说明

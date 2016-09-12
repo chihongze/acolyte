@@ -117,7 +117,7 @@ class FlowService(AbstractService):
 
         for job_ref in flow_meta.jobs:
 
-            job = self._job_mgr.get(job_ref.name)
+            job = self._job_mgr.get(job_ref.job_name)
             new_bind_args[job.name] = {}
 
             for event, job_arg_declares in job.job_args.items():
