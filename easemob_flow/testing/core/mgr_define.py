@@ -12,6 +12,10 @@ from easemob_flow.testing.core.job import (
 from easemob_flow.core.mgr import DictBasedManager
 from easemob_flow.core.job import JobRef
 from easemob_flow.core.flow import FlowMeta
+from easemob_flow.util.validate import (
+    IntField,
+    declare_args
+)
 
 
 class TestFlowMeta(FlowMeta):
@@ -23,15 +27,15 @@ class TestFlowMeta(FlowMeta):
             jobs=(
                 JobRef(
                     name="echo",
-                    trigger=[
+                    trigger={
 
-                    ],
-                    finish=[
+                    },
+                    finish={
 
-                    ],
-                    stop=[
+                    },
+                    stop={
 
-                    ]
+                    }
                 ),
                 JobRef(
                     name="old_man",
@@ -52,13 +56,20 @@ class TestFlowMeta(FlowMeta):
             },
         )
 
-    def on_start(self, context, arguments):
+    @declare_args(
+        IntField("x", required=True),
+        IntField("y", required=True)
+    )
+    def on_start(self, context, x, y):
         pass
 
-    def on_stop(self, context, arguments):
+    @declare_args(
+        IntField("z", required=True)
+    )
+    def on_stop(self, context, z):
         pass
 
-    def on_finish(self, context, arguments):
+    def on_finish(self, context):
         pass
 
     def on_exception(self, context, exc_type, exc_value, tb):

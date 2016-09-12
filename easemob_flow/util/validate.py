@@ -319,3 +319,22 @@ def check(*fields, messages=messages,
         return _func
 
     return _check
+
+
+def declare_args(*fields):
+    """该decorator用于在方法上声明验证规则
+       被修饰的方法对象会拥有一个field_rules对象
+       :param fields: 被修饰函数的参数规则集合
+    """
+
+    def _declare_args(f):
+
+        f.field_rules = fields
+
+        @wraps(f)
+        def _func(*args, **kwds):
+            return f(*args, **kwds)
+
+        return _func
+
+    return _declare_args

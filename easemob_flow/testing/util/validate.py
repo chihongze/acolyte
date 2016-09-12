@@ -7,6 +7,7 @@ from easemob_flow.util.validate import (
     BadReq,
     check,
 )
+from easemob_flow.testing.core.mgr_define import TestFlowMeta
 
 
 class RuleTestCase(EasemobFlowTestCase):
@@ -208,3 +209,12 @@ class CheckDecoratorTestCase(EasemobFlowTestCase):
         self.assertEqual(rs.status_code, 400)
         self.assertEqual(rs.reason, "invalid_id")
         self.assertEqual(rs.msg, "不合法的ID值'0'")
+
+
+class DeclareArgsDecoratorTestCase(EasemobFlowTestCase):
+
+    def testDeclareArgs(self):
+        """测试被declare_args注解所修饰的方法
+        """
+        tmf = TestFlowMeta()
+        self.assertEqual(len(tmf.on_start.field_rules), 2)
