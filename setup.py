@@ -1,5 +1,5 @@
 import setuptools
-from easemob_flow import VERSION
+from acolyte import VERSION
 
 install_requires = [
     "flask >= 0.11",
@@ -10,7 +10,7 @@ install_requires = [
 ]
 
 setuptools.setup(
-    name="easemob-flow",
+    name="Acolyte",
     version=VERSION,
     author="ChiHongze",
     author_email="chihz@easemob.com",
