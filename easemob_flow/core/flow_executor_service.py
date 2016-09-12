@@ -6,6 +6,13 @@ from easemob_flow.core.service import (
 from easemob_flow.core.storage.flow_template import (
     FlowTemplateDAO,
 )
+from easemob_flow.util.validate import (
+    IntField,
+    StrField,
+    Field,
+    check,
+    BadReq
+)
 
 
 class FlowExecutorService(AbstractService):
@@ -19,8 +26,8 @@ class FlowExecutorService(AbstractService):
         self._flow_meta_mgr = self.service("flow_meta_manager")
         self._job_mgr = self.service("job_manager")
 
-    def start_flow(self, flow_template_id: int,
-                   start_flow_args: dict,
+    def start_flow(self, flow_template_id: int, initiator: int,
+                   description: str, start_flow_args: dict,
                    first_job_trigger_args: dict) -> Result:
         """开启一个flow进程，创建flow_instance并执行第一个Job
 
@@ -30,16 +37,22 @@ class FlowExecutorService(AbstractService):
            S4. 回调flow meta中on_start方法的逻辑
            S5. 回调第一个Job的trigger事件
 
-           :param flow_name: 具体的flow_template的名称
-           :param first_job_trigger_args: 触发第一个Job需要的参数
-           :return flow_instance
+           :param flow_template_id: 使用的flow template
+           :param initiator: 发起人
+           :param description: 本次flow描述
+           :param start_flow_args: 执行FlowMeta的on_start方法时所需要的参数
+           :param first_job_trigger_args: 执行第一个Job的trigger事件时所需要的参数
         """
+
+        # 检查flow_template_id是否合法
         flow_template = self._flow_tpl_dao.query_flow_template_by_id(
             flow_template_id)
         if flow_template is None:
-            return Result.bad_request(
-                "template_not_found",
-                msg=self.msg(tpl_id=flow_template_id))
+            raise BadReq("invalid_flow_template",
+                         flow_template_id=flow_template_id)
+        flow_meta = self._flow_meta_mgr.get(flow_template.flow_meta)
+        if flow_meta is None:
+            raise BadReq("invalid_flow_meta", flow_meta=flow_meta)
 
     def next_job(self, flow_instance_id: int, current_job_finish_args: dict,
                  new_job_trigger_args: dict) -> Result:

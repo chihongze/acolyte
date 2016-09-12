@@ -68,11 +68,12 @@ class ConnectionPool:
             if num:
                 return cursor.fetchall()
             return []
+
         results = self.cursor_callback(callback)
 
         if mapper is None:
             return results
-        return (mapper(r) for r in results)
+        return [mapper(r) for r in results]
 
     def execute(self, sql, args):
 
@@ -89,6 +90,19 @@ class ConnectionPool:
                 rs = callback(cursor)
                 conn.commit()
                 return rs
+
+    @contextmanager
+    def lock(self, lock_key, wait_timeout=-1):
+        """基于MySQL的分布式锁，详情请参见mysql的get_lock函数
+           :param lock_key: 锁关键字，通过该关键字来标识一个锁
+           :param wait_timeout: 等待超时时间，如果为负数，那么永不超时
+        """
+        with self.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("select get_lock(%s, %s)",
+                               (lock_key, wait_timeout))
+                yield
+                cursor.execute("select release_lock(%s)", (lock_key,))
 
 
 class _PooledMySQLConnection:

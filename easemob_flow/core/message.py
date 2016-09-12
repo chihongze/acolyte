@@ -19,10 +19,10 @@ messages = {
             },
 
             "create_flow_template": {
-                "flow_meta_empty": "flow_meta参数不能为空",
-
+                "flow_meta_not_exist": "指定的flow meta对象'{flow_meta}'不存在",
                 "name_already_exist": "flow template '{name}' 已存在",
                 "invalid_creator_id": "创建者ID '{creator}' 不合法",
+                "not_allow_bind_const": "参数 '{arg_name}' 是const类型，不允许被覆盖"
             }
         },
 

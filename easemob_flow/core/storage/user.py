@@ -20,6 +20,19 @@ class UserDAO(AbstractDAO):
             "select * from user where id = %s"
         ), (user_id,), _mapper)
 
+    def query_users_by_id_list(self, id_list, to_dict=False):
+        """根据ID列表来批量查询用户信息
+        """
+        global _mapper
+        holders = ",".join(("%s", ) * len(id_list))
+        users = self._db.query_all((
+            "select * from user "
+            "where id in ({holders})"
+        ).format(holders=holders), id_list, _mapper)
+        if to_dict:
+            return {u.id: u for u in users}
+        return users
+
     def is_email_exist(self, email):
         return self._db.query_one(
             "select id from user where email = %s", (email,))

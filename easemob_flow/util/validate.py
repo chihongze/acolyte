@@ -95,7 +95,7 @@ class Field:
     def _customize_check(self, value):
         """自定义检查，子类可以实现
         """
-        ...
+        return value
 
 
 class IntField(Field):

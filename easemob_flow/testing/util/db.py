@@ -1,3 +1,4 @@
+import time
 import threading
 from easemob_flow.testing import EasemobFlowTestCase
 from easemob_flow.util.db import ConnectionPool
@@ -39,4 +40,31 @@ class DBPoolTestCase(EasemobFlowTestCase):
 
         with cdt:
             while count < 10:
+                cdt.wait()
+
+        cdt = threading.Condition()
+        count = 0
+
+        def _fight_for_lock(sleep_time):
+            """锁争夺
+            """
+            nonlocal pool
+            nonlocal count
+            with pool.lock("nidaye"):
+                print("Thread '{thread_name}' get the lock!".format(
+                    thread_name=threading.currentThread().name))
+                time.sleep(sleep_time)
+                print("Thread '{thread_name}' release the lock!".format(
+                    thread_name=threading.currentThread().name))
+                with cdt:
+                    count += 1
+                    cdt.notify_all()
+
+        for i in range(5):
+            t = threading.Thread(target=_fight_for_lock, args=(0.5,))
+            t.name = "hehe %d" % i
+            t.start()
+
+        with cdt:
+            while count < 5:
                 cdt.wait()

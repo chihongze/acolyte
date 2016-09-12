@@ -10,7 +10,7 @@ from easemob_flow.testing.core.job import (
     DJob,
 )
 from easemob_flow.core.mgr import DictBasedManager
-from easemob_flow.core.job import JobRef, JobArg
+from easemob_flow.core.job import JobRef
 from easemob_flow.core.flow import FlowMeta
 
 
