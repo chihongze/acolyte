@@ -24,6 +24,7 @@ class FlowMeta(metaclass=ABCMeta):
         self._start_args = start_args
         self._stop_args = stop_args
         self._description = description
+        self._job_ref_map = {job_ref.step_name for job_ref in jobs}
 
     @property
     def name(self):
@@ -78,6 +79,27 @@ class FlowMeta(metaclass=ABCMeta):
         """
         pass
 
+    def get_next_step(self, current_step):
+        """根据当前步骤获取下一个执行步骤
+        """
+
+        # 当前step为start的情况
+        if current_step == "start":
+            if self._jobs:
+                return self._jobs[0].step_name
+            else:
+                return "finish"
+
+        for idx, job_ref in enumerate(self._jobs):
+            if job_ref.step_name == current_step:
+                if idx < len(self._jobs) - 1:
+                    return self._jobs[idx + 1]
+                else:
+                    return "finish"
+
+    def get_job_ref_by_step_name(self, step_name):
+        return self._job_ref_map.get(step_name, None)
+
 
 class FlowTemplate:
 
@@ -107,6 +129,8 @@ class FlowStatus:
     """
 
     STATUS_WAITING = "waiting"  # 等待执行
+
+    STATUS_INIT = "init"  # 初始化，正在运行on_start
 
     STATUS_RUNNING = "running"  # 正在执行
 

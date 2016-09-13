@@ -67,12 +67,14 @@ class JobInstance:
     """描述一个Job的运行状态
     """
 
-    def __init__(self, id_: int, flow_instance_id: int, status: str,
-                 trigger_actor: int, created_on: datetime.datetime=None,
+    def __init__(self, id_: int, flow_instance_id: int, step_name: str,
+                 status: str, trigger_actor: int,
+                 created_on: datetime.datetime=None,
                  updated_on: datetime.datetime=None):
         """
         :param id_: 每个Job的运行实例有一个编号
         :param flow_instance_id: 隶属的flow_instance
+        :param step_name: step名称
         :param status: 运行状态
         :param trigger_actor: 触发者
         :param created_on: 运行实例起始时间
@@ -80,6 +82,7 @@ class JobInstance:
         """
         self.id = id_
         self.flow_instance_id = flow_instance_id
+        self.step_name = step_name
         self.status = status
         self.trigger_actor = trigger_actor
         if created_on is None:

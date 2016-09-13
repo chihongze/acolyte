@@ -18,7 +18,19 @@ class AbstractFlowContext(collections.Mapping, metaclass=ABCMeta):
         pass
 
     def stop(self):
+        """Job可以在action中随时回调此方法终结flow的执行
+        """
         self.__flow_executor.stop(self)
+
+    def finish(self):
+        """Job可以在action中调用此方法来表示自己已经执行完毕
+        """
+        self.__flow_executor.finish(self)
+
+    def save(self, data):
+        """Job可以通过该方法保存持久化的数据
+        """
+        pass
 
 
 class MySQLContext(AbstractFlowContext):

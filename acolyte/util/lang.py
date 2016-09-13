@@ -45,7 +45,7 @@ def to_str(obj, *fields):
     )
 
 
-def get_from_nested_dict(d, *keys):
+def get_from_nested_dict(d, *keys, default=None):
     """从嵌套字典中获取值，如果在某一层级获取不到，则返回None
        :param d: 目标字典
        :param keys: 层级key列表
@@ -54,5 +54,5 @@ def get_from_nested_dict(d, *keys):
         try:
             d = d[k]
         except KeyError:
-            return None
+            return default
     return d

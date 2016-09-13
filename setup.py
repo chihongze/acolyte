@@ -2,7 +2,7 @@ import setuptools
 from acolyte import VERSION
 
 install_requires = [
-    "flask >= 0.11",
+    "tornado >= 4.4.0",
     "simplejson >= 3.8.2",
     "PyMySQL >= 0.7.9",
     "fixtures >= 3.0.0",

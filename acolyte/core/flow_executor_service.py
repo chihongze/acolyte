@@ -7,14 +7,14 @@ from acolyte.core.service import (
     AbstractService,
     Result,
 )
+from acolyte.core.flow import FlowStatus
+from acolyte.core.job import JobStatus, JobArg
 from acolyte.core.context import MySQLContext
 from acolyte.core.storage.user import UserDAO
-from acolyte.core.storage.flow_template import (
-    FlowTemplateDAO,
-)
-from acolyte.core.storage.flow_instance import (
-    FlowInstanceDAO,
-)
+from acolyte.core.storage.flow_template import FlowTemplateDAO
+from acolyte.core.storage.flow_instance import FlowInstanceDAO
+from acolyte.core.storage.job_instance import JobInstanceDAO
+from acolyte.core.storage.job_action_data import JobActionDataDAO
 from acolyte.core.message import default_validate_messages
 from acolyte.util.validate import (
     IntField,
@@ -24,6 +24,7 @@ from acolyte.util.validate import (
     BadReq,
     InvalidFieldException
 )
+from acolyte.exception import ObjectNotFoundException
 
 
 class FlowExecutorService(AbstractService):
@@ -39,6 +40,8 @@ class FlowExecutorService(AbstractService):
         self._job_mgr = self._("job_manager")
         self._flow_instance_dao = FlowInstanceDAO(self._db)
         self._user_dao = UserDAO(self._db)
+        self._job_instance_dao = JobInstanceDAO(self._db)
+        self._job_action_dao = JobActionDataDAO(self._db)
 
     @check(
         IntField("flow_template_id", required=True),
@@ -64,6 +67,9 @@ class FlowExecutorService(AbstractService):
            :param description: 本次flow描述
            :param start_flow_args: 执行FlowMeta的on_start方法时所需要的参数
         """
+
+        if start_flow_args is None:
+            start_flow_args = {}
 
         # 检查flow_template_id是否合法
         flow_template = self._flow_tpl_dao.query_flow_template_by_id(
@@ -112,18 +118,202 @@ class FlowExecutorService(AbstractService):
 
         # 回调on_start
         flow_meta.on_start(ctx, *start_flow_args)
+
+        # 将状态更新到running
+        self._flow_instance_dao.update_status(
+            flow_instance.id, FlowStatus.STATUS_RUNNING)
+
         return Result.ok(data=flow_instance)
 
-    def handle_job_action(self, flow_instance_id: int, job_action: str,
-                          action_args: Dict[str, Any]) -> Result:
+    @check(
+        IntField("flow_instance_id", required=True),
+        StrField("job", required=True),
+        StrField("job_action", required=True),
+        IntField("actor", required=True),
+        Field("action_args", type_=dict, required=False,
+              default=None, value_of=json.loads)
+    )
+    def handle_job_action(self, flow_instance_id: int,
+                          target_step: str, target_action: str,
+                          actor: int, action_args: Dict[str, Any]) -> Result:
         """处理Job中的自定义动作
+
+           S1. 检查并获取flow实例
+           S2. 检查job以及job_action的存在性
+           S3. 检查执行人是否合法
+           S4. 检查当前是否可以允许该step及target_action的执行
+           S5. 合并以及检查相关参数
+           S6. 回调相关Action逻辑
+           S7. 返回回调函数的返回值
+
            :param flow_instance_id: flow的标识
-           :param job_action: 自定义的动作名称
+           :param target_step: 要执行的Step
+           :param target_action: 自定义的动作名称
+           :param actor: 执行人
            :param action_args: 执行该自定义动作所需要的参数
         """
-        pass
 
-    def _combine_and_check_args(self, action_name, field_rules, *args_dict):
+        if action_args is None:
+            action_args = {}
+
+        # 检查flow instance的id合法性
+        flow_instance = self._flow_instance_dao.query_by_instance_id(
+            flow_instance_id)
+        if flow_instance is None:
+            raise BadReq("invalid_flow_instance",
+                         flow_instance_id=flow_instance_id)
+
+        # 检查flow instance的状态
+        if flow_instance.status != FlowStatus.STATUS_RUNNING:
+            raise BadReq("invalid_status", status=flow_instance.status)
+
+        # 获取对应的flow template和flow meta
+        flow_template = self._flow_tpl_dao\
+            .query_flow_template_by_id(flow_instance.flow_template_id)
+        if flow_template is None:
+            raise BadReq("unknown_flow_template",
+                         flow_template_id=flow_instance.flow_template_id)
+        try:
+            flow_meta = self._flow_meta_mgr.get(flow_template.flow_meta)
+        except ObjectNotFoundException:
+            raise BadReq("unknown_flow_meta", flow_meta=flow_meta)
+
+        actor_info = self._user_dao.query_user_by_id(actor)
+        if actor_info is None:
+            raise BadReq("invalid_actor", actor=actor)
+
+        # 检查当前step以及当前step是否完成
+        # 检查下一个状态是否是目标状态
+        handler_mtd, job_def, job_ref = self._check_step(
+            flow_meta, flow_instance, target_step, target_action)
+
+        # 合并检查参数 request_args - template_bind_args - meta_bind_args
+        rs = self._check_and_combine_action_args(
+            job_def, target_action, action_args, job_ref, flow_template)
+        if rs.status_code == Result.STATUS_BADREQUEST:
+            return rs
+
+        # 创建job_instance记录
+        ...
+
+        ctx = MySQLContext(self, self._db, flow_instance.id)
+
+        action_args = rs.data
+        rs = handler_mtd(ctx, **action_args)
+        return rs
+
+    def _check_and_combine_action_args(
+            self, job_def, target_action, request_args,
+            job_ref, flow_template):
+
+        job_arg_defines = job_def.job_args.get(target_action)
+
+        # 无参数定义
+        if not job_arg_defines:
+            return {}
+
+        # 获取各级的参数绑定
+        meta_bind_args = job_ref.bind_args.get(target_action, {})
+        tpl_bind_args = flow_template.bind_args.get(target_action, {})
+
+        args_chain = ChainMap(request_args, tpl_bind_args, meta_bind_args)
+
+        # 最终生成使用的参数集合
+        args = {}
+
+        for job_arg_define in job_arg_defines:
+            try:
+                arg_name = job_arg_define.name
+
+                # auto 类型，直接从chain中取值
+                if job_arg_define.mark == JobArg.MARK_AUTO:
+                    value = args_chain[arg_name]
+                # static类型，从template中取值
+                elif job_arg_define.mark == JobArg.MARK_STATIC:
+                    value = tpl_bind_args.get(arg_name, None)
+                # const类型，从meta中取值
+                elif job_arg_define.mark == JobArg.MARK_CONST:
+                    value = meta_bind_args.get(arg_name, None)
+
+                args[arg_name] = job_arg_define.field_info(value)
+            except InvalidFieldException as e:
+                full_field_name = "{step}.{action}.{arg}".format(
+                    step=job_ref.step_name,
+                    action=target_action,
+                    arg=arg_name
+                )
+                return self._gen_bad_req_result(e, full_field_name)
+
+        return Result.ok(data=args)
+
+    def _check_step(self, flow_meta, flow_instance,
+                    target_step, target_action):
+        current_step = flow_instance.current_step
+
+        # 检查当前action的方法是否存在
+        target_job_ref = flow_meta.get_job_ref_by_step_name(target_step)
+        if target_job_ref is None:
+            raise BadReq("unknown_target_step", target_step=target_step)
+        try:
+            job_def = self._job_mgr.get(target_job_ref.job_name)
+        except ObjectNotFoundException:
+            raise BadReq("unknown_job", job_name=target_job_ref.name)
+
+        handler_mtd = getattr(job_def, "on_" + target_action, None)
+        if handler_mtd is None:
+            raise BadReq("unknown_action_handler", action=target_action)
+
+        # 当前step即目标step
+        if current_step == target_step:
+
+            # 检查当前action是否被执行过
+            action = self._job_action_dao\
+                .query_by_instance_id_and_step(
+                    instance_id=flow_instance.id,
+                    step=target_step
+                )
+            if action is not None:
+                raise BadReq("action_already_runned", action=target_action)
+
+            # 如果非trigger，则检查trigger是否执行过
+            if target_action != "trigger":
+                trigger_action = self._job_action_dao\
+                    .query_by_instance_id_and_step(
+                        instance_id=flow_instance.id,
+                        step="trigger"
+                    )
+                if trigger_action is None:
+                    raise BadReq("no_trigger")
+
+            return handler_mtd
+
+        # 当前step非目标step
+        job_instance = self._job_instance_dao.\
+            query_by_instance_id_and_step(
+                flow_instance_id=flow_instance.id,
+                step_name=current_step
+            )
+
+        # 流程记录了未知的current_step
+        if job_instance is None:
+            raise BadReq("unknown_current_step", current_step=current_step)
+
+        # 当前的step尚未完成
+        if job_instance.status != JobStatus.STATUS_FINISHED:
+            raise BadReq("current_step_unfinished",
+                         current_step=current_step)
+
+        # 获取下一个该运行的步骤
+        next_step = flow_meta.get_next_step(current_step)
+        if next_step != target_step:
+            raise BadReq("invalid_target_step", next_step=next_step)
+        if target_action != "trigger":
+            raise BadReq("no_trigger")
+
+        return handler_mtd, job_def, target_job_ref
+
+    def _combine_and_check_args(
+            self, action_name, field_rules, *args_dict):
         """合并 & 检查参数 先合并，后检查
            :param field_rules: 字段规则
            :param old_args
@@ -140,21 +330,24 @@ class FlowExecutorService(AbstractService):
                 val = field_rule(_combined_args[field_rule.name])
                 _combined_args[field_rule.name] = val
         except InvalidFieldException as e:
-            loc, _ = locale.getlocale(locale.LC_ALL)
             full_field_name = "{action_name}.{field_name}".format(
                 action_name=action_name,
                 field_name=e.field_name
             )
-            full_reason = "{full_field_name}_{reason}".format(
-                full_field_name=full_field_name,
-                reason=e.reason
-            )
-            msg = default_validate_messages[loc][e.reason]
-            if e.expect is None or e.expect == "":
-                msg = msg.format(field_name=full_field_name)
-            else:
-                msg = msg.format(
-                    field_name=full_field_name, expect=e.expect)
-            return Result.bad_request(reason=full_reason, msg=msg)
+            return self._gen_bad_req_result(e, full_field_name)
         else:
             return Result.ok(data=_combined_args)
+
+    def _gen_bad_req_result(self, e, full_field_name):
+        loc, _ = locale.getlocale(locale.LC_ALL)
+        full_reason = "{full_field_name}_{reason}".format(
+            full_field_name=full_field_name,
+            reason=e.reason
+        )
+        msg = default_validate_messages[loc][e.reason]
+        if e.expect is None or e.expect == "":
+            msg = msg.format(field_name=full_field_name)
+        else:
+            msg = msg.format(
+                field_name=full_field_name, expect=e.expect)
+        return Result.bad_request(reason=full_reason, msg=msg)
