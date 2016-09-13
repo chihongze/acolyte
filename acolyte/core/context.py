@@ -60,8 +60,11 @@ class MySQLContext(AbstractFlowContext):
     def __iter__(self):
         return self.keys()
 
-    def get(self, key):
-        return self[key]
+    def get(self, key, value=None):
+        v = self[key]
+        if v is None:
+            return value
+        return v
 
     def items(self):
         rs = self._db.query_all((

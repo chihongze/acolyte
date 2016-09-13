@@ -2,6 +2,7 @@ from abc import (
     ABCMeta,
     abstractmethod
 )
+from typing import Dict, Any
 from acolyte.util import db
 from acolyte.util.service_container import ServiceContainer
 from acolyte.core.mgr import (
@@ -34,7 +35,7 @@ class EasemobFlowBootstrap(AbstractBootstrap):
     def __init__(self):
         super().__init__()
 
-    def start(self, config: dict):
+    def start(self, config: Dict[str, Dict[str, Any]]):
         """在这里对各种组件进行初始化
            :param config: 配置数据，字典套字典什么的
         """

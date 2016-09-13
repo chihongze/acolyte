@@ -1,5 +1,7 @@
 import datetime
+from typing import List, Dict, Any
 from abc import ABCMeta, abstractmethod
+from acolyte.core.job import JobRef
 
 
 class FlowMeta(metaclass=ABCMeta):
@@ -8,8 +10,10 @@ class FlowMeta(metaclass=ABCMeta):
        每个流程都可以抽象成flow meta，比如工程更新、SQL审核、机器审核等等
     """
 
-    def __init__(self, name: str, jobs: list, start_args: dict=None,
-                 stop_args: dict=None, description: str=""):
+    def __init__(self, name: str, jobs: List[JobRef],
+                 start_args: Dict[str, Any]=None,
+                 stop_args: Dict[str, Any]=None,
+                 description: str=""):
         """
         :param name: flow meta名称
         :param jobs: 包含的JobRef对象列表
@@ -77,9 +81,9 @@ class FlowMeta(metaclass=ABCMeta):
 
 class FlowTemplate:
 
-    def __init__(self, id_: int, flow_meta: str, name: str, bind_args: dict,
-                 max_run_instance: int, creator: int,
-                 created_on: datetime.datetime):
+    def __init__(self, id_: int, flow_meta: str, name: str,
+                 bind_args: Dict[str, Any], max_run_instance: int,
+                 creator: int, created_on: datetime.datetime):
         """根据FlowMeta来生成的Flow模板
            :param flow_meta: 使用的flow_meta
            :param name: 模板名称

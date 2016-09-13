@@ -100,6 +100,7 @@ class EntryPointManager(DictBasedManager):
             obj = ep.load()
             self._container[obj.name] = obj
 
+
 # managers for job and flow_meta
 job_manager = EntryPointManager("easemob_flow.job")
 flow_meta_manager = EntryPointManager("easemob_flow.flow_meta")

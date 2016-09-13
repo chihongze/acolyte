@@ -26,6 +26,17 @@ messages = {
             }
         },
 
+        "FlowExecutorService": {
+            "start_flow": {
+                "invalid_flow_template":
+                "不合法的flow template id: {flow_template_id}",
+                "invalid_flow_meta": "不合法的flow meta: {flow_meta}",
+                "invalid_initiator": "不合法的发起者ID: {initiator}",
+                "too_many_instance":
+                "无法创建更多的运行时实例，允许最大实例数目为: {allow_instance_num}"
+            }
+        },
+
         "UserService": {
 
             "login": {

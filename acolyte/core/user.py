@@ -1,9 +1,12 @@
+import datetime
+
+
 class Role:
 
     """角色
     """
 
-    def __init__(self, id_, name, description):
+    def __init__(self, id_: int, name: str, description: str):
         self.id = id_
         self.name = name
         self.description = description
@@ -14,7 +17,10 @@ class User:
     """用户
     """
 
-    def __init__(self, id_, email, name, role, created_on, last_login_time):
+    def __init__(self, id_: int, email: str,
+                 name: str, role: int,
+                 created_on: datetime.datetime,
+                 last_login_time: datetime.datetime):
         self.id = id_
         self.email = email
         self.name = name

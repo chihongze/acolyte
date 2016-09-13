@@ -1,4 +1,8 @@
 import datetime
+from typing import (
+    Dict,
+    Any
+)
 from abc import (
     ABCMeta,
     abstractmethod
@@ -12,7 +16,8 @@ class AbstractJob(metaclass=ABCMeta):
        实现的其它Job均需要继承该类
     """
 
-    def __init__(self, name: str, description: str, job_args: dict=None):
+    def __init__(self, name: str, description: str,
+                 job_args: Dict[str, Any]=None):
         """
         :param name: Job名称
         :param description: Job描述
@@ -98,7 +103,8 @@ class JobActionData:
     def __init__(self,
                  id_: int, job_instance_id: int,
                  action: str, actor: int,
-                 arguments: dict, data: dict,
+                 arguments: Dict[str, Any],
+                 data: Dict[str, Any],
                  created_on: datetime.datetime=None,
                  finished_on: datetime.datetime=None):
         """
@@ -132,7 +138,7 @@ class JobRef:
     """还对象用于在FlowMeta等声明中引用一个Job
     """
 
-    def __init__(self, step_name: str, job_name: str, **bind_args: dict):
+    def __init__(self, step_name: str, job_name: str, **bind_args):
         self._step_name = step_name
         self._job_name = job_name
         self._bind_args = bind_args if bind_args is not None else {}
