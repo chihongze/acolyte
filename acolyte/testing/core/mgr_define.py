@@ -29,7 +29,7 @@ class TestFlowMeta(FlowMeta):
                     step_name="echo",
                     job_name="echo",
                     trigger={
-
+                        "a": 5
                     },
                     finish={
 
@@ -46,17 +46,10 @@ class TestFlowMeta(FlowMeta):
                     step_name="job_A",
                     job_name="job_A"
                 ),
-                JobRef(
-                    step_name="job_B",
-                    job_name="job_B"
-                ),
             ),
             start_args={
                 "x": -1,
                 "y": -2
-            },
-            stop_args={
-                "z": -3,
             },
         )
 
@@ -65,19 +58,16 @@ class TestFlowMeta(FlowMeta):
         IntField("y", required=True)
     )
     def on_start(self, context, x, y):
-        pass
+        print("start the workflow, x = {x}, y = {y}".format(
+            x=x,
+            y=y
+        ))
 
-    @declare_args(
-        IntField("z", required=True)
-    )
-    def on_stop(self, context, z):
-        pass
+    def on_stop(self, context):
+        print("the whole workflow stopped")
 
     def on_finish(self, context):
-        pass
-
-    def on_exception(self, context, exc_type, exc_value, tb):
-        pass
+        print("the whole workflow finished")
 
 # 构建测试使用的容器
 

@@ -18,10 +18,11 @@ class FlowInstanceDAO(AbstractDAO):
             "select * from flow_instance where id = %s limit 1"
         ), (instance_id,), _mapper)
 
-    def query_instance_num_by_tpl_id(self, tpl_id):
+    def query_running_instance_num_by_tpl_id(self, tpl_id):
         return int(self._db.query_one_field((
             "select count(*) as c from flow_instance "
-            "where flow_template_id = %s"
+            "where flow_template_id = %s and "
+            "status in ('running', 'init')"
         ), (tpl_id,)))
 
     def insert(self, flow_template_id, initiator, description):
@@ -53,6 +54,13 @@ class FlowInstanceDAO(AbstractDAO):
             "update flow_instance set status = %s, "
             "updated_on = %s where id = %s limit 1"
         ), (status, now, flow_instance_id))
+
+    def update_current_step(self, flow_instance_id, current_step):
+        now = datetime.datetime.now()
+        return self._db.execute((
+            "update flow_instance set current_step = %s, "
+            "updated_on = %s where id = %s limit 1"
+        ), (current_step, now, flow_instance_id))
 
     def delete_by_instance_id(self, instance_id):
         if isinstance(instance_id, list):

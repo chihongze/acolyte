@@ -65,3 +65,6 @@ class Result(ViewObject):
         self.reason = reason
         self.msg = msg
         self.data = data
+
+    def is_success(self):
+        return self._status == Result.STATUS_SUCCESS

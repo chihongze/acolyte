@@ -135,6 +135,11 @@ class FlowService(AbstractService):
                         if job_arg_declare.mark == JobArg.MARK_CONST:
                             continue
 
+                        # 如果为None并且是auto类型，那么可以在此不检查
+                        if bind_value is None and \
+                                job_arg_declare.mark == JobArg.MARK_AUTO:
+                            continue
+
                         # 执行校验并替换新值
                         new_value = job_arg_declare.field_info(bind_value)
                         new_bind_args[job.name][event][

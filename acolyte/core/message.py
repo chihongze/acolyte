@@ -34,6 +34,24 @@ messages = {
                 "invalid_initiator": "不合法的发起者ID: {initiator}",
                 "too_many_instance":
                 "无法创建更多的运行时实例，允许最大实例数目为: {allow_instance_num}"
+            },
+            "handle_job_action": {
+                "invalid_flow_instance":
+                "不合法的flow instance id: {flow_instance_id}",
+                "invalid_status": "当前flow instance的状态为 '{status}'，无法执行action",
+                "unknown_flow_template":
+                "找不到对应的flow template: {flow_template_id}",
+                "unknown_flow_meta": "找不到对应的flow meta: '{flow_meta}'",
+                "invalid_actor": "不合法的actor id '{actor}'",
+                "unknown_target_step": "未知的target step: '{target_step}'",
+                "unknown_job": "未知的Job引用 '{job_name}'",
+                "unknown_action_handler": "找不到action handler: '{action}'",
+                "step_already_runned": "step '{step}' 已经被运行过了",
+                "action_already_runned": "该action已经被运行过了",
+                "no_trigger": "尚未执行trigger action",
+                "unknown_current_step": "当前step未知: '{current_step}'",
+                "current_step_unfinished": "当前step '{current_step}' 尚未完成",
+                "invalid_target_step": "下一个目标step为 '{next_step}'",
             }
         },
 

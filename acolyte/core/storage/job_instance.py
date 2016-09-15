@@ -45,3 +45,21 @@ class JobInstanceDAO(AbstractDAO):
                     created_on=now,
                     updated_on=now
                 )
+
+    def query_by_flow_instance_id(self, flow_instance_id):
+        return self._db.query_all((
+            "select * from job_instance where "
+            "flow_instance_id = %s"
+        ), (flow_instance_id, ), _mapper)
+
+    def update_status(self, job_instance_id, status):
+        now = datetime.datetime.now()
+        return self._db.execute((
+            "update job_instance set status = %s, "
+            "updated_on = %s where id = %s limit 1"
+        ), (status, now, job_instance_id))
+
+    def delete_by_flow_instance_id(self, flow_instance_id):
+        return self._db.execute((
+            "delete from job_instance where flow_instance_id = %s"
+        ), (flow_instance_id,))

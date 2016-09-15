@@ -24,7 +24,7 @@ class FlowMeta(metaclass=ABCMeta):
         self._start_args = start_args
         self._stop_args = stop_args
         self._description = description
-        self._job_ref_map = {job_ref.step_name for job_ref in jobs}
+        self._job_ref_map = {job_ref.step_name: job_ref for job_ref in jobs}
 
     @property
     def name(self):
@@ -73,12 +73,6 @@ class FlowMeta(metaclass=ABCMeta):
         """
         pass
 
-    @abstractmethod
-    def on_exception(self, context, exc_type, exc_value, tb):
-        """当发生异常时，执行此逻辑
-        """
-        pass
-
     def get_next_step(self, current_step):
         """根据当前步骤获取下一个执行步骤
         """
@@ -93,7 +87,7 @@ class FlowMeta(metaclass=ABCMeta):
         for idx, job_ref in enumerate(self._jobs):
             if job_ref.step_name == current_step:
                 if idx < len(self._jobs) - 1:
-                    return self._jobs[idx + 1]
+                    return self._jobs[idx + 1].step_name
                 else:
                     return "finish"
 

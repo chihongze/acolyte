@@ -109,7 +109,7 @@ class JobActionData:
                  arguments: Dict[str, Any],
                  data: Dict[str, Any],
                  created_on: datetime.datetime=None,
-                 finished_on: datetime.datetime=None):
+                 updated_on: datetime.datetime=None):
         """
         :param id_: Action实例编号
         :param job_instance_id: 隶属的job instance
@@ -133,7 +133,7 @@ class JobActionData:
         else:
             self.created_on = created_on
 
-        self.finished_on = finished_on
+        self.updated_on = updated_on
 
 
 class JobRef:
@@ -142,6 +142,9 @@ class JobRef:
     """
 
     def __init__(self, step_name: str, job_name: str, **bind_args):
+        """
+        :param step_name: 不能叫'start'或者'finish'，这俩是保留字
+        """
         self._step_name = step_name
         self._job_name = job_name
         self._bind_args = bind_args if bind_args is not None else {}

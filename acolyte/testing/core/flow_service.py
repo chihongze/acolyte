@@ -42,13 +42,13 @@ class FlowServiceTestCase(EasemobFlowTestCase):
                 "trigger": {
                     "b": 2
                 },
-                "finish": {
-                    "c": 3
+                "multiply": {
+                    "c": 10
                 },
-                "stop": {
-                    "d": "1111",
-                    "e": "10"
-                },
+                "minus": {
+                    "d": 2,
+                    "e": 3
+                }
             }
         })
         self.assertResultSuccess(rs)
@@ -59,21 +59,16 @@ class FlowServiceTestCase(EasemobFlowTestCase):
                 "trigger": {
                     "b": "2",
                 },
-                "finish": {
+                "multiply": {
                     "c": "3",
                 },
-                "stop": {
-                    "d": 12.34,
-                    "e": 12
+                "minus": {
+                    "d": "11",
+                    "e": "12"
                 }
             }
         })
         self.assertResultSuccess(rs)
-        new_flow_meta = rs.data
-        self.assertEqual(new_flow_meta["echo"]["trigger"]["b"], 2)
-        self.assertEqual(new_flow_meta["echo"]["finish"]["c"], 3)
-        self.assertEqual(new_flow_meta["echo"]["stop"]["d"], "12.34")
-        self.assertEqual(new_flow_meta["echo"]["stop"]["e"], "12")
 
         # 测试出错的情况
         rs = self.flow_service._validate_tpl_bind_args(flow_meta, {
@@ -81,16 +76,16 @@ class FlowServiceTestCase(EasemobFlowTestCase):
                 "trigger": {
                     "b": 2
                 },
-                "finish": {
+                "multiply": {
                     "c": 3
                 },
-                "stop": {
-                    "d": "1",
+                "minus": {
+                    "d": "1a",
                     "e": "10"
                 },
             }
         })
-        self.assertResultBadRequest(rs, "echo_stop_d_less_than_min_length")
+        self.assertResultBadRequest(rs, "echo_minus_d_invalid_type")
 
     def testCreateFlowTemplate(self):
         """测试创建flow template
@@ -101,11 +96,11 @@ class FlowServiceTestCase(EasemobFlowTestCase):
                 "trigger": {
                     "b": 2
                 },
-                "finish": {
+                "multiply": {
                     "c": 3
                 },
-                "stop": {
-                    "d": 12.34,
+                "minus": {
+                    "d": 11,
                     "e": 12
                 }
             }
@@ -158,12 +153,12 @@ class FlowServiceTestCase(EasemobFlowTestCase):
                 "trigger": {
                     "b": 2
                 },
-                "finish": {
+                "multiply": {
                     "c": 3
                 },
-                "stop": {
-                    "d": "1",
-                    "e": "122342"
+                "minus": {
+                    "d": "1a",
+                    "e": "1"
                 }
             }
         }
@@ -174,7 +169,7 @@ class FlowServiceTestCase(EasemobFlowTestCase):
             max_run_instance=1,
             creator=1
         )
-        self.assertResultBadRequest(rs, "echo_stop_d_less_than_min_length")
+        self.assertResultBadRequest(rs, "echo_minus_d_invalid_type")
 
     def testGetAllFlowTemplates(self):
         rs = self.flow_service.create_flow_template(
@@ -185,11 +180,11 @@ class FlowServiceTestCase(EasemobFlowTestCase):
                     "trigger": {
                         "b": 2
                     },
-                    "finish": {
+                    "multiply": {
                         "c": 3
                     },
-                    "stop": {
-                        "d": 12.34,
+                    "minus": {
+                        "d": 11,
                         "e": 12
                     }
                 }

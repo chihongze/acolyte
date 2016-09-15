@@ -101,7 +101,7 @@ class FlowExecutorService(AbstractService):
                 tpl_id=flow_template_id)
             with self._db.lock(lock_key):
                 current_instance_num = self._flow_instance_dao.\
-                    query_instance_num_by_tpl_id(flow_template_id)
+                    query_running_instance_num_by_tpl_id(flow_template_id)
                 if current_instance_num >= flow_template.max_run_instance:
                     raise BadReq(
                         reason="too_many_instance",
@@ -117,7 +117,7 @@ class FlowExecutorService(AbstractService):
         ctx = MySQLContext(self, self._db, flow_instance.id)
 
         # 回调on_start
-        flow_meta.on_start(ctx, *start_flow_args)
+        flow_meta.on_start(ctx, **start_flow_args)
 
         # 将状态更新到running
         self._flow_instance_dao.update_status(
@@ -127,8 +127,8 @@ class FlowExecutorService(AbstractService):
 
     @check(
         IntField("flow_instance_id", required=True),
-        StrField("job", required=True),
-        StrField("job_action", required=True),
+        StrField("target_step", required=True),
+        StrField("target_action", required=True),
         IntField("actor", required=True),
         Field("action_args", type_=dict, required=False,
               default=None, value_of=json.loads)
@@ -136,7 +136,7 @@ class FlowExecutorService(AbstractService):
     def handle_job_action(self, flow_instance_id: int,
                           target_step: str, target_action: str,
                           actor: int, action_args: Dict[str, Any]) -> Result:
-        """处理Job中的自定义动作
+        """处理Job中的Action
 
            S1. 检查并获取flow实例
            S2. 检查job以及job_action的存在性
@@ -193,13 +193,41 @@ class FlowExecutorService(AbstractService):
         if rs.status_code == Result.STATUS_BADREQUEST:
             return rs
 
-        # 创建job_instance记录
-        ...
+        job_instance = self._job_instance_dao.query_by_instance_id_and_step(
+            instance_id=flow_instance_id,
+            step=target_step
+        )
 
-        ctx = MySQLContext(self, self._db, flow_instance.id)
+        # 如果是trigger事件，需要创建job_instance记录
+        if target_action == "trigger":
+            job_instance = self._job_instance_dao.insert(
+                flow_instance_id, target_step, actor)
+            self._flow_instance_dao.update_current_step(
+                flow_instance_id, target_step)
+
+        action = self._job_action_dao.insert(
+            job_instance_id=job_instance.id,
+            action=target_action,
+            actor=actor,
+            arguments=action_args,
+            data={}
+        )
+
+        ctx = MySQLContext(
+            flow_executor=self,
+            db=self._db,
+            flow_instance_id=flow_instance.id,
+            job_instance_id=job_instance.id,
+            job_action_id=action.id,
+            flow_meta=flow_meta,
+            current_step=target_step
+        )
 
         action_args = rs.data
         rs = handler_mtd(ctx, **action_args)
+        if not isinstance(rs, Result):
+            rs = Result.ok(data=rs)
+
         return rs
 
     def _check_and_combine_action_args(
@@ -210,11 +238,12 @@ class FlowExecutorService(AbstractService):
 
         # 无参数定义
         if not job_arg_defines:
-            return {}
+            return Result.ok(data={})
 
         # 获取各级的参数绑定
         meta_bind_args = job_ref.bind_args.get(target_action, {})
-        tpl_bind_args = flow_template.bind_args.get(target_action, {})
+        tpl_bind_args = flow_template.bind_args.get(
+            job_ref.step_name, {}).get(target_action, {})
 
         args_chain = ChainMap(request_args, tpl_bind_args, meta_bind_args)
 
@@ -266,42 +295,53 @@ class FlowExecutorService(AbstractService):
         # 当前step即目标step
         if current_step == target_step:
 
+            job_instance = self._job_instance_dao.\
+                query_by_instance_id_and_step(
+                    instance_id=flow_instance.id,
+                    step=current_step
+                )
+
+            if job_instance.status == JobStatus.STATUS_FINISHED:
+                raise BadReq("step_already_runned", step=target_step)
+
             # 检查当前action是否被执行过
             action = self._job_action_dao\
-                .query_by_instance_id_and_step(
-                    instance_id=flow_instance.id,
-                    step=target_step
+                .query_by_job_instance_id_and_action(
+                    job_instance_id=job_instance.id,
+                    action=target_action
                 )
+
             if action is not None:
                 raise BadReq("action_already_runned", action=target_action)
 
             # 如果非trigger，则检查trigger是否执行过
             if target_action != "trigger":
                 trigger_action = self._job_action_dao\
-                    .query_by_instance_id_and_step(
-                        instance_id=flow_instance.id,
-                        step="trigger"
+                    .query_by_job_instance_id_and_action(
+                        job_instance_id=job_instance.id,
+                        action="trigger"
                     )
                 if trigger_action is None:
                     raise BadReq("no_trigger")
 
-            return handler_mtd
+            return handler_mtd, job_def, target_job_ref
 
-        # 当前step非目标step
-        job_instance = self._job_instance_dao.\
-            query_by_instance_id_and_step(
-                flow_instance_id=flow_instance.id,
-                step_name=current_step
-            )
+        if current_step != "start":
+            # 当前step非目标step
+            job_instance = self._job_instance_dao.\
+                query_by_instance_id_and_step(
+                    instance_id=flow_instance.id,
+                    step=current_step
+                )
 
-        # 流程记录了未知的current_step
-        if job_instance is None:
-            raise BadReq("unknown_current_step", current_step=current_step)
+            # 流程记录了未知的current_step
+            if job_instance is None:
+                raise BadReq("unknown_current_step", current_step=current_step)
 
-        # 当前的step尚未完成
-        if job_instance.status != JobStatus.STATUS_FINISHED:
-            raise BadReq("current_step_unfinished",
-                         current_step=current_step)
+            # 当前的step尚未完成
+            if job_instance.status != JobStatus.STATUS_FINISHED:
+                raise BadReq("current_step_unfinished",
+                             current_step=current_step)
 
         # 获取下一个该运行的步骤
         next_step = flow_meta.get_next_step(current_step)
@@ -351,3 +391,54 @@ class FlowExecutorService(AbstractService):
             msg = msg.format(
                 field_name=full_field_name, expect=e.expect)
         return Result.bad_request(reason=full_reason, msg=msg)
+
+    def _finish_step(self, ctx):
+        """标记一个job instance完成，通常由action通过context进行回调
+           S1. 将job_instance的状态更新为finish
+           S2. 检查整个flow是否已经完成
+           S3. 如果整个流程已经完成，那么标记flow_instance的status
+           S4. 回调flow_meta中的on_finish事件
+        """
+        flow_instance_id, job_instance_id = (
+            ctx.flow_instance_id,
+            ctx.job_instance_id
+        )
+
+        self._job_instance_dao.update_status(
+            job_instance_id=job_instance_id,
+            status=JobStatus.STATUS_FINISHED
+        )
+
+        next_step = ctx.flow_meta.get_next_step(ctx.current_step)
+
+        # 尚未完成，继续处理
+        if next_step != "finish":
+            return
+
+        # 修改flow_instance的状态
+        self._flow_instance_dao.update_status(
+            flow_instance_id=flow_instance_id,
+            status=FlowStatus.STATUS_FINISHED
+        )
+
+        # 回调on_finish事件
+        on_finish_handler = getattr(ctx.flow_meta, "on_finish", None)
+        if on_finish_handler is None:
+            return
+        on_finish_handler(ctx)
+
+    def _stop_whole_flow(self, ctx):
+        """终止整个flow的运行，通常由action通过context进行回调
+           S1. 标记flow_instance的status为stop
+           S2. 回调flow_meta中的on_stop事件
+        """
+        self._flow_instance_dao.update_status(
+            flow_instance_id=ctx.flow_instance_id,
+            status=FlowStatus.STATUS_STOPPED
+        )
+
+        # 回调on_stop事件
+        on_stop_handler = getattr(ctx.flow_meta, "on_stop", None)
+        if on_stop_handler is None:
+            return
+        on_stop_handler(ctx)
