@@ -68,9 +68,7 @@ class JobInstance:
     """
 
     def __init__(self, id_: int, flow_instance_id: int, step_name: str,
-                 status: str, trigger_actor: int,
-                 created_on: datetime.datetime=None,
-                 updated_on: datetime.datetime=None):
+                 status: str, trigger_actor: int, created_on, updated_on):
         """
         :param id_: 每个Job的运行实例有一个编号
         :param flow_instance_id: 隶属的flow_instance
@@ -85,17 +83,8 @@ class JobInstance:
         self.step_name = step_name
         self.status = status
         self.trigger_actor = trigger_actor
-        if created_on is None:
-            self.created_on = datetime.datetime.now()
-        else:
-            self.created_on = created_on
-
-        if updated_on is None:
-            self.updated_on = (self.created_on
-                               if created_on is not None
-                               else datetime.datetime.now())
-        else:
-            self.updated_on = updated_on
+        self.created_on = created_on
+        self.updated_on = updated_on
 
 
 class JobActionData:
@@ -108,8 +97,8 @@ class JobActionData:
                  action: str, actor: int,
                  arguments: Dict[str, Any],
                  data: Dict[str, Any],
-                 created_on: datetime.datetime=None,
-                 updated_on: datetime.datetime=None):
+                 created_on: datetime.datetime,
+                 updated_on: datetime.datetime):
         """
         :param id_: Action实例编号
         :param job_instance_id: 隶属的job instance
@@ -127,12 +116,7 @@ class JobActionData:
         self.actor = actor
         self.arguments = arguments
         self.data = data
-
-        if created_on is None:
-            self.created_on = datetime.datetime.now()
-        else:
-            self.created_on = created_on
-
+        self.created_on = created_on
         self.updated_on = updated_on
 
 

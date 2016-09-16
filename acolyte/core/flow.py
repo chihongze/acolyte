@@ -141,9 +141,8 @@ class FlowInstance:
     """
 
     def __init__(self, id_: int, flow_template_id: int, initiator: int,
-                 current_step: str=None, status: str=FlowStatus.STATUS_WAITING,
-                 description: str=None, created_on: datetime.datetime=None,
-                 updated_on: datetime.datetime=None):
+                 current_step: str, status, description, created_on,
+                 updated_on):
         """
         :param id_: 每个flow运行实例都会有一个唯一ID
         :param flow_template_id: 所属的flow_template
@@ -160,15 +159,5 @@ class FlowInstance:
         self.current_step = current_step
         self.status = status
         self.description = description
-
-        if created_on is None:
-            self.created_on = datetime.datetime.now()
-        else:
-            self.created_on = created_on
-
-        if updated_on is None:
-            self.updated_on = (self.created_on
-                               if created_on is not None
-                               else datetime.datetime.now())
-        else:
-            self.updated_on = updated_on
+        self.created_on = created_on
+        self.updated_on = updated_on
