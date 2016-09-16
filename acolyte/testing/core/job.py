@@ -71,9 +71,11 @@ class OldManJob(AbstractJob):
         return Result.ok(data="跑的比谁都快")
 
     def on_question(self, context, question):
-        context.finish()
-        return Result.ok(
-            data="你问我{question}，我可以回答无可奉告".format(question=question))
+        if question == "董先森连任好不好啊":
+            context.finish()
+            return Result.ok(data="吼啊")
+        else:
+            return Result.bad_request("old_man_angry", msg="无可奉告")
 
     def on_angry(self, context):
         print("I'm angry! 你们这样子是不行的！我要终止整个flow！")

@@ -67,4 +67,4 @@ class Result(ViewObject):
         self.data = data
 
     def is_success(self):
-        return self._status == Result.STATUS_SUCCESS
+        return self.status_code == Result.STATUS_SUCCESS

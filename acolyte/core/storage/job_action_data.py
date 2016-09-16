@@ -59,6 +59,11 @@ class JobActionDataDAO(AbstractDAO):
             "where id = %s"
         ), (json.dumps(data), now, action_data_id))
 
+    def delete_by_id(self, job_action_data_id):
+        return self._db.execute((
+            "delete from job_action_data where id = %s"
+        ), (job_action_data_id))
+
     def delete_by_job_instance_id(self, job_instance_id):
         return self._db.execute((
             "delete from job_action_data where job_instance_id = %s"

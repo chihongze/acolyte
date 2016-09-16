@@ -274,7 +274,7 @@ class FlowExecutorServiceTestCase(EasemobFlowTestCase):
         self.print_json(rs)
         self.assertResultSuccess(rs)
 
-        # 执行下一个action
+        # 执行下一个action，返回bad request result
         rs = self._flow_exec.handle_job_action(
             flow_instance_id=flow_instance.id,
             target_step="old_man",
@@ -285,7 +285,21 @@ class FlowExecutorServiceTestCase(EasemobFlowTestCase):
             }
         )
         self.print_json(rs)
+        self.assertResultBadRequest(rs, "old_man_angry")
+
+        # 再来一次，这次返回ok result
+        rs = self._flow_exec.handle_job_action(
+            flow_instance_id=flow_instance.id,
+            target_step="old_man",
+            target_action="question",
+            actor=1,
+            action_args={
+                "question": "董先森连任好不好啊"
+            }
+        )
+        self.print_json(rs)
         self.assertResultSuccess(rs)
+        self.assertEqual(rs.data, "吼啊")
 
         # 执行下一个step, 该step完成时会触发flow_meta的on_finish方法
         rs = self._flow_exec.handle_job_action(

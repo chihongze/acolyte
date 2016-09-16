@@ -228,6 +228,10 @@ class FlowExecutorService(AbstractService):
         if not isinstance(rs, Result):
             rs = Result.ok(data=rs)
 
+        if not rs.is_success():
+            # 如果返回结果不成功，那么允许重来
+            self._job_action_dao.delete_by_id(action.id)
+
         return rs
 
     def _check_and_combine_action_args(
@@ -305,8 +309,8 @@ class FlowExecutorService(AbstractService):
                 raise BadReq("step_already_runned", step=target_step)
 
             # 检查当前action是否被执行过
-            action = self._job_action_dao\
-                .query_by_job_instance_id_and_action(
+            action = self._job_action_dao.\
+                query_by_job_instance_id_and_action(
                     job_instance_id=job_instance.id,
                     action=target_action
                 )
@@ -316,8 +320,8 @@ class FlowExecutorService(AbstractService):
 
             # 如果非trigger，则检查trigger是否执行过
             if target_action != "trigger":
-                trigger_action = self._job_action_dao\
-                    .query_by_job_instance_id_and_action(
+                trigger_action = self._job_action_dao.\
+                    query_by_job_instance_id_and_action(
                         job_instance_id=job_instance.id,
                         action="trigger"
                     )
