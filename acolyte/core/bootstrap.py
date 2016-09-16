@@ -48,14 +48,19 @@ class EasemobFlowBootstrap(AbstractBootstrap):
             "host": "localhost",
             "port": 3306,
             "user": "root",
+            "password": "",
             "db": "easemob_flow",
         })
 
         connection_pool = db.ConnectionPool(db_connect_cfg, max_pool_size)
         self._pool = connection_pool
 
-        service_container = ServiceContainer()
-        self._service_binding(service_container)
+        self._service_container = ServiceContainer()
+        self._service_binding(self._service_container)
+
+    @property
+    def service_container(self):
+        return self._service_container
 
     def _service_binding(self, service_container: ServiceContainer):
         """将服务绑定到注册容器

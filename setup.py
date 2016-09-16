@@ -16,7 +16,8 @@ setuptools.setup(
     author_email="chihz@easemob.com",
     url='http://github.com/chihongze/easemob-flow',
     description=(
-        ""
+        "An interactive flow framework, you can use it to build "
+        "CI, CD system"
     ),
     license="MIT",
     packages=setuptools.find_packages("."),
