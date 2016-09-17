@@ -12,6 +12,7 @@ from acolyte.core.mgr import (
 from acolyte.core.flow_service import FlowService
 from acolyte.core.user_service import UserService
 from acolyte.core.job_service import JobService
+from acolyte.core.flow_executor_service import FlowExecutorService
 
 
 class AbstractBootstrap(metaclass=ABCMeta):
@@ -87,5 +88,6 @@ class EasemobFlowBootstrap(AbstractBootstrap):
         service_container.register_service(FlowService)
         service_container.register_service(UserService)
         service_container.register_service(JobService)
+        service_container.register_service(FlowExecutorService)
 
         service_container.after_register()

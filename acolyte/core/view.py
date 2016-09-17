@@ -61,7 +61,7 @@ class JobRefView(ViewObject):
 
     @classmethod
     def from_job_ref(cls, job_ref) -> ViewObject:
-        pass
+        return cls(job_ref.step_name, job_ref.job_name, job_ref.bind_args)
 
     def __init__(self, step_name: str, job_name: str,
                  bind_args: dict):

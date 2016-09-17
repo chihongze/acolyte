@@ -136,6 +136,8 @@ class APIHandlerBuilder:
                     service_args[mtd_arg_name] = current_user_id \
                         if handler is None else handler(current_user_id)
 
+            print("====> args: {}".format(service_args))
+
             rs = getattr(self._(_service_id), _method_name)(**service_args)
             self._output_result(rs)
 

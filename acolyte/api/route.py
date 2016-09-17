@@ -3,6 +3,7 @@
 
 from acolyte.api import (
     flow,
+    flow_executor,
 )
 from acolyte.api import APIHandlerBuilder
 
@@ -11,7 +12,7 @@ URL_MAPPING = [
 
 ]
 
-_handler_modules = (flow, )
+_handler_modules = (flow, flow_executor)
 
 for handler_module in _handler_modules:
     handlers = getattr(handler_module, "handlers", [])

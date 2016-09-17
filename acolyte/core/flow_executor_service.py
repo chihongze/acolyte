@@ -87,7 +87,7 @@ class FlowExecutorService(AbstractService):
             raise BadReq("invalid_initiator", initiator=initiator)
 
         # 检查并合并start_flow_args
-        field_rules = getattr(flow_meta.on_start, "field_rules")
+        field_rules = getattr(flow_meta.on_start, "field_rules", [])
         rs = self._combine_and_check_args(
             "start", field_rules, start_flow_args, flow_meta.start_args)
         if rs.status_code == Result.STATUS_BADREQUEST:
