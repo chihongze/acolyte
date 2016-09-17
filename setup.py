@@ -26,6 +26,14 @@ setuptools.setup(
         "console_scripts": [
 
         ],
+        "acolyte.job": [
+            "programmer = acolyte.builtin_ext.mooncake:ProgrammerJob",
+            "hr = acolyte.builtin_ext.mooncake:HRJob",
+            "boss = acolyte.builtin_ext.mooncake:BossJob"
+        ],
+        "acolyte.flow_meta": [
+            "mooncake_flow = acolyte.builtin_ext.mooncake:MooncakeFlowMeta"
+        ]
     },
     classifiers=[
         'Development Status :: 3 - Alpha',

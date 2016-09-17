@@ -34,8 +34,16 @@ for handler_module in _handler_modules:
         body_variables = handler.get("body_variables", {})
         for body_var_name, arg_info in body_variables.items():
             if isinstance(arg_info, str):
-                builder.bind_body_vars(body_var_name, arg_info)
+                builder.bind_body_var(body_var_name, arg_info)
             else:
-                builder.bind_path_var(body_var_name, *arg_info)
+                builder.bind_body_var(body_var_name, *arg_info)
+
+        # 绑定上下文变量
+        context_variables = handler.get("context_variables", {})
+        for context_var_name, arg_info in context_variables.items():
+            if isinstance(arg_info, str):
+                builder.bind_context_var(context_var_name, arg_info)
+            else:
+                builder.bind_context_var(context_var_name, *arg_info)
 
         URL_MAPPING.append((handler["url"], builder.build()))

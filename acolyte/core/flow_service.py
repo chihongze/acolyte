@@ -43,6 +43,26 @@ class FlowService(AbstractService):
 
     def get_all_flow_meta(self) -> Result:
         """获得所有注册到容器的flow_meta信息
+           :return [
+
+                {
+
+                    "name": "mooncake_flow",
+                    "description": "just a test flow",
+                    "jobs": [
+                        {
+                            "step_name": "programmer",
+                            "job_name": "programmer",
+                            "bind_args": {
+                                "trigger": {
+                                    "a": 1,
+                                    "b": 2,
+                                }
+                            }
+                        }
+                    ]
+                },
+           ]
         """
         all_flow_meta = [
             FlowMetaView.from_flow_meta(meta, self._job_mgr)

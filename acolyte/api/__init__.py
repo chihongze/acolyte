@@ -3,6 +3,7 @@ import simplejson as json
 from functools import wraps
 from tornado.web import RequestHandler
 from acolyte.util.json import to_json
+from acolyte.core.service import Result
 
 
 class BaseAPIHandler(RequestHandler, metaclass=ABCMeta):
@@ -18,6 +19,24 @@ class BaseAPIHandler(RequestHandler, metaclass=ABCMeta):
         if not body:
             return {}
         return json.loads(self.request.body)
+
+    def _check_token(self):
+        """检查请求头中的token是否合法
+        """
+        try:
+            token = self.request.headers["token"]
+            return self._("UserService").check_token(token)
+        except KeyError:
+            return Result.bad_request("token_not_exist",
+                                      "Can't find token in request headers")
+
+    def _output_result(self, rs):
+        """将result对象按照json的格式输出
+        """
+        self.set_header('Content-Type', 'application/json;charset=utf-8')
+        self.set_status(rs.status_code)
+        self.write(to_json(rs))
+        self.finish()
 
 
 def response_json(func):
@@ -45,6 +64,7 @@ class APIHandlerBuilder:
         self._http_mtd = http_mtd
         self._bind_path_vars = {}
         self._bind_body_vars = {}
+        self._bind_context_vars = {}
 
     def bind_path_var(self, path_var_index, mtd_arg_name, handler=None):
         """将tornado的path variable绑定到service方法的参数上
@@ -54,12 +74,16 @@ class APIHandlerBuilder:
         self._bind_path_vars[path_var_index] = mtd_arg_name, handler
         return self
 
-    def bind_body_vars(self, body_var_name, mtd_arg_name, handler=None):
+    def bind_body_var(self, body_var_name, mtd_arg_name, handler=None):
         """将body中的值提取出来，绑定到service方法的参数上
            :param body_var_name: body参数名称
            :param mtd_arg_name: 方法参数名
         """
         self._bind_body_vars[body_var_name] = mtd_arg_name, handler
+        return self
+
+    def bind_context_var(self, context_var_name, mtd_arg_name, handler=None):
+        self._bind_context_vars[context_var_name] = mtd_arg_name, handler
         return self
 
     def build(self):
@@ -70,6 +94,7 @@ class APIHandlerBuilder:
 
         _bind_path_vars = self._bind_path_vars
         _bind_body_vars = self._bind_body_vars
+        _bind_context_vars = self._bind_context_vars
         _service_id = self._service_id
         _method_name = self._method_name
 
@@ -79,6 +104,14 @@ class APIHandlerBuilder:
             nonlocal _bind_body_vars
             nonlocal _service_id
             nonlocal _method_name
+
+            # 检查token
+            check_token_rs = self._check_token()
+            if not check_token_rs.is_success():
+                self._output_result(check_token_rs)
+                return
+
+            current_user_id = check_token_rs.data["id"]
 
             service_args = {}
 
@@ -96,18 +129,22 @@ class APIHandlerBuilder:
                 service_args[mtd_arg_name] = val if handler is None \
                     else handler(val)
 
+            # 填充context variable
+            for context_var_name, (mtd_arg_name, handler) in \
+                    _bind_context_vars.items():
+                if context_var_name == "current_user_id":
+                    service_args[mtd_arg_name] = current_user_id \
+                        if handler is None else handler(current_user_id)
+
             rs = getattr(self._(_service_id), _method_name)(**service_args)
-            self.set_header('Content-Type', 'application/json;charset=utf-8')
-            self.set_status(rs.status_code)
-            self.write(to_json(rs))
-            self.finish()
+            self._output_result(rs)
 
         attrs[self._http_mtd] = handler
 
-        class_name = self.mtd_name_to_class_name()
+        class_name = self._mtd_name_to_class_name()
         return type(class_name, bases, attrs)
 
-    def mtd_name_to_class_name(self):
+    def _mtd_name_to_class_name(self):
         str_buf = []
         for idx, char in enumerate(self._method_name):
             # 第一个字母大写

@@ -97,10 +97,10 @@ class EntryPointManager(DictBasedManager):
 
     def load(self):
         for ep in pkg_resources.iter_entry_points(self._entry_point):
-            obj = ep.load()
+            obj = ep.load()()
             self._container[obj.name] = obj
 
 
 # managers for job and flow_meta
-job_manager = EntryPointManager("easemob_flow.job")
-flow_meta_manager = EntryPointManager("easemob_flow.flow_meta")
+job_manager = EntryPointManager("acolyte.job")
+flow_meta_manager = EntryPointManager("acolyte.flow_meta")
