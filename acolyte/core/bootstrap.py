@@ -4,6 +4,7 @@ from abc import (
 )
 from typing import Dict, Any
 from acolyte.util import db
+from acolyte.util import log
 from acolyte.util.service_container import ServiceContainer
 from acolyte.core.mgr import (
     job_manager,
@@ -41,6 +42,10 @@ class EasemobFlowBootstrap(AbstractBootstrap):
            :param config: 配置数据，字典套字典什么的
         """
 
+        # 初始化日志
+        log.load_logger_config(config)
+        log.acolyte.info("Starting acolyte ...")
+
         # 初始化数据库连接池
         db_pool_cfg = config.get("db_pool", {})
         max_pool_size = db_pool_cfg.get("pool_size", 10)
@@ -58,6 +63,7 @@ class EasemobFlowBootstrap(AbstractBootstrap):
 
         self._service_container = ServiceContainer()
         self._service_binding(self._service_container)
+        log.acolyte.info("Acolyte started .")
 
     @property
     def service_container(self):

@@ -56,3 +56,9 @@ def get_from_nested_dict(d, *keys, default=None):
         except KeyError:
             return default
     return d
+
+
+def get_full_class_name(cls):
+    """获取一个类的完整名称 包名.类名
+    """
+    return cls.__module__ + "." + cls.__name__

@@ -4,6 +4,8 @@
 import simplejson as json
 import datetime
 import locale
+from acolyte.util import log
+from acolyte.util.json import to_json
 from acolyte.util.validate import (
     Field,
     IntField,
@@ -125,6 +127,9 @@ class FlowService(AbstractService):
         flow_template = self._flow_tpl_dao.insert_flow_template(
             flow_meta_name, name, json.dumps(bind_args),
             max_run_instance, creator, created_on)
+
+        log.acolyte.info(
+            "New flow template created, {}".format(to_json(flow_template)))
 
         # 返回刚创建的View
         return Result.ok(

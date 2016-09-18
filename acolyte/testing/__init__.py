@@ -6,6 +6,7 @@ from acolyte.testing.core.mgr_define import (
     job_mgr
 )
 from acolyte.util import db
+from acolyte.util import log
 from acolyte.util.json import to_json
 from acolyte.core.service import Result
 from acolyte.core.flow_service import FlowService
@@ -20,6 +21,7 @@ class UnitTestBootstrap(AbstractBootstrap):
         super().__init__()
 
     def start(self, config):
+        log.load_logger_config(config)
         self.service_container = ServiceContainer()
         self._binding(config, self.service_container)
 

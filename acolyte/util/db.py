@@ -2,6 +2,7 @@ import time
 import pymysql
 from queue import Queue
 from contextlib import contextmanager
+from acolyte.util import log
 
 
 class ConnectionPool:
@@ -14,12 +15,19 @@ class ConnectionPool:
         self.config = config
         self.max_pool_size = max_pool_size
         self._initialize_pool()
+        log.acolyte.info(
+            "init pool config: max_pool_size = {}".format(max_pool_size))
 
     def _initialize_pool(self):
         self.pool = Queue(maxsize=self.max_pool_size)
         for _ in range(0, self.max_pool_size):
             conn = _PooledMySQLConnection(**self.config)
             self.pool.put_nowait(conn)
+            log.acolyte.debug((
+                "init db connection "
+                "host = {host}, port = {port}, "
+                "user = {user}, db = {db}"
+            ).format(**self.config))
 
     @contextmanager
     def connection(self):

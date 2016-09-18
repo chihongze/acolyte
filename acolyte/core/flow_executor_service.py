@@ -2,6 +2,8 @@ import locale
 import simplejson as json
 from collections import ChainMap
 from typing import Dict, Any
+from acolyte.util import log
+from acolyte.util.json import to_json
 from acolyte.util.service_container import ServiceContainer
 from acolyte.core.service import (
     AbstractService,
@@ -123,6 +125,9 @@ class FlowExecutorService(AbstractService):
         self._flow_instance_dao.update_status(
             flow_instance.id, FlowStatus.STATUS_RUNNING)
 
+        log.acolyte.info(
+            "start flow instance {}".format(to_json(flow_instance)))
+
         return Result.ok(data=flow_instance)
 
     @check(
@@ -205,6 +210,8 @@ class FlowExecutorService(AbstractService):
             self._flow_instance_dao.update_current_step(
                 flow_instance_id, target_step)
 
+        action_args = rs.data
+
         action = self._job_action_dao.insert(
             job_instance_id=job_instance.id,
             action=target_action,
@@ -223,7 +230,6 @@ class FlowExecutorService(AbstractService):
             current_step=target_step
         )
 
-        action_args = rs.data
         rs = handler_mtd(ctx, **action_args)
         if not isinstance(rs, Result):
             rs = Result.ok(data=rs)
@@ -231,6 +237,15 @@ class FlowExecutorService(AbstractService):
         if not rs.is_success():
             # 如果返回结果不成功，那么允许重来
             self._job_action_dao.delete_by_id(action.id)
+
+        log.acolyte.info((
+            "Job action executed, "
+            "action_data = {action_data}, "
+            "action_result = {action_result}"
+        ).format(
+            action_data=to_json(action),
+            action_result=to_json(rs)
+        ))
 
         return rs
 

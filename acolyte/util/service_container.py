@@ -4,6 +4,8 @@ from acolyte.exception import (
     ObjectNotFoundException,
     InvalidArgumentException
 )
+from acolyte.util import log
+from acolyte.util.lang import get_full_class_name
 from acolyte.core.service import AbstractService
 
 
@@ -31,6 +33,11 @@ class ServiceContainer:
         if not lazy:
             service_defination.init()
         self._container[service_id] = service_defination
+
+        log.acolyte.debug((
+            "register service {service_id} -> {service_class} to container"
+        ).format(service_id=service_id,
+                 service_class=get_full_class_name(service_obj.__class__)))
 
     def register_service(self, service_class, init_callback=None, lazy=False):
         """该方法专门用于facade服务对象的注册

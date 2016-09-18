@@ -2,6 +2,7 @@ from abc import ABCMeta
 import simplejson as json
 from functools import wraps
 from tornado.web import RequestHandler
+from acolyte.util import log
 from acolyte.util.json import to_json
 from acolyte.core.service import Result
 
@@ -102,6 +103,7 @@ class APIHandlerBuilder:
 
             nonlocal _bind_path_vars
             nonlocal _bind_body_vars
+            nonlocal _bind_context_vars
             nonlocal _service_id
             nonlocal _method_name
 
@@ -136,9 +138,16 @@ class APIHandlerBuilder:
                     service_args[mtd_arg_name] = current_user_id \
                         if handler is None else handler(current_user_id)
 
-            print("====> args: {}".format(service_args))
-
             rs = getattr(self._(_service_id), _method_name)(**service_args)
+
+            log.api.debug((
+                "execute service "
+                "service_id = {service_id} "
+                "method_name = {method_name} "
+                "service_args = {service_args}"
+            ).format(service_id=_service_id, method_name=_method_name,
+                     service_args=service_args))
+
             self._output_result(rs)
 
         attrs[self._http_mtd] = handler
